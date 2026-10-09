@@ -54,14 +54,21 @@ Feuille de route :
 ## Organisation des fichiers
 
 ```
-index.html          page d'accueil
-manifest.json       fiche d'identité de la PWA (nom, icônes, couleurs)
-sw.js               service worker (mode hors ligne) — doit rester à la racine
-.nojekyll           dit à GitHub Pages de publier les fichiers tels quels
-css/style.css       styles (thème clair/sombre automatique)
-js/app.js           point d'entrée JavaScript
-js/pwa/             tout ce qui concerne l'installation et le hors ligne
-icons/              icônes 192 et 512 px (« any » et « maskable »)
+index.html                 page unique de l'application
+manifest.json              fiche d'identité de la PWA (nom, icônes, couleurs)
+sw.js                      service worker (hors ligne + en-têtes COOP/COEP) — doit rester à la racine
+.nojekyll                  dit à GitHub Pages de publier les fichiers tels quels
+css/style.css              styles (thème clair/sombre automatique)
+js/app.js                  point d'entrée : relie toutes les parties
+js/config.js               qualités, langues, moteurs (constantes)
+js/pwa/                    installation et enregistrement du service worker
+js/stockage/               IndexedDB (historique, téléchargements) et réglages
+js/audio/                  micro, décodage des fichiers, découpage en morceaux
+js/transcription/          Web Worker (Whisper), téléchargement avec reprise, assemblage du texte
+js/interface/              une « carte » de l'écran par fichier + textes des messages
+js/outils/                 mise en forme, écran allumé
+vendor/transformers/       Transformers.js + ONNX Runtime copiés depuis npm (voir son README)
+icons/                     icônes 192 et 512 px (« any » et « maskable »)
 ```
 
 ## Règles à ne pas oublier
@@ -69,18 +76,37 @@ icons/              icônes 192 et 512 px (« any » et « maskable »)
 - **Chemins toujours relatifs** (`./css/style.css`, jamais `/css/style.css`) :
   le site est publié dans un sous-dossier sur GitHub Pages.
 - **À chaque modification d'un fichier de l'application**, augmenter
-  `VERSION_CACHE` dans `sw.js` (v1 → v2…), sinon les téléphones gardent
+  `VERSION_CACHE` dans `sw.js` (v2 → v3…), sinon les téléphones gardent
   l'ancienne version. Tout nouveau fichier doit aussi être ajouté à la
   liste `FICHIERS_APPLICATION` de `sw.js`.
+- **Transformers.js et ONNX Runtime** : les versions dans `vendor/` doivent aller
+  ensemble (voir `vendor/transformers/README.md`). Si on change la version
+  d'ONNX Runtime, changer aussi `CACHE_MOTEUR` dans `js/transcription/worker.js`.
+- **Langue** : Transformers.js v4 ne détecte pas la langue (anglais par défaut) :
+  toujours passer `language`.
+- **Garde-fous Whisper** (worker) : `no_repeat_ngram_size` et `max_new_tokens`
+  évitent les boucles « mot mot mot… » et les recalculs très longs. Ne pas les retirer.
+- **Messages d'erreur** : un code par type d'erreur (`js/transcription/erreurs.js`),
+  texte rassurant correspondant dans `js/interface/messages.js`.
+
+## Comment Claude teste (environnement cloud)
+
+- `huggingface.co` est bloqué par le réseau de l'environnement cloud : on ne peut pas
+  y télécharger les vrais modèles. Pour les tests, Playwright (Chromium) intercepte
+  les requêtes vers Hugging Face et sert une copie de Whisper tiny (paquet npm
+  `sts-whisper-tiny`, utilisé seulement pour les tests, jamais dans l'application).
+- Voix de test : `espeak-ng` (voix de synthèse, très mal reconnue par Whisper tiny :
+  la qualité du texte doit être jugée sur une vraie voix, sur le téléphone).
+- Le site est servi dans un sous-dossier (`/Transcriptor/`) comme sur GitHub Pages.
 
 ## Points de vigilance connus
 
 - **Performances sur téléphone** : utiliser de petits modèles Whisper
   (`tiny` ou `base`, version « quantifiée » = compressée). Les gros modèles
   sont trop lents ou trop lourds en mémoire sur mobile.
-- **GitHub Pages** ne permet pas de régler certains en-têtes HTTP
-  (COOP/COEP) qui accélèrent le calcul multi-cœurs. Contournement possible :
-  un petit script « service worker » dédié (`coi-serviceworker`).
+- **GitHub Pages** ne permet pas de régler les en-têtes HTTP COOP/COEP qui
+  permettent le calcul multi-cœurs : c'est `sw.js` qui les ajoute (la page se
+  recharge une fois toute seule à la première visite).
 - **Micro** : le navigateur n'autorise le micro que sur une page sécurisée
   (`https://` ou `http://localhost`).
 - **Reconnaissance des voix (étape 2)** : faisable dans le navigateur mais
