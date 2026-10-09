@@ -12,8 +12,8 @@
 - 🇫🇷 Interface en français ; transcription en français par défaut, avec
   d'autres langues au choix.
 
-> **État actuel :** le socle de l'application est en place (page d'accueil,
-> installation, mode hors ligne). La transcription n'est pas encore codée.
+> **État actuel :** étape 1 en place : transcription d'une voix (micro ou
+> fichier), entièrement sur l'appareil, avec historique.
 
 ## Feuille de route
 
@@ -67,17 +67,53 @@ Le micro ne fonctionne que sur une adresse sécurisée (`https://`) ou sur
 publiée sur **GitHub Pages** (en `https://`), que nous mettrons en place
 plus tard.
 
+## Fonctions disponibles
+
+- **Modèle Whisper téléchargé une seule fois**, avec barre de progression,
+  pause, et **reprise après une coupure de connexion** (le téléchargement se
+  fait par morceaux de 4 Mo gardés sur l'appareil).
+- **Trois qualités** (Réglages) : Rapide (≈ 45 Mo), Équilibré (≈ 80 Mo),
+  Précis (≈ 250 Mo), plus ≈ 27 Mo de moteur de calcul la première fois.
+- **Moteur de calcul** : automatique (carte graphique WebGPU si possible,
+  sinon processeur), ou au choix.
+- **Micro** (démarrer / arrêter, durée affichée) ou **fichier audio**
+  (MP3, WAV, M4A, OGG).
+- Audios longs **découpés en morceaux d'environ 28 s**, coupés dans les
+  silences, avec 1 s de chevauchement.
+- Résultat **horodaté par phrase**, boutons **Copier**, **Télécharger (.txt)**,
+  **Effacer**.
+- **Historique** sur l'appareil : ouvrir, renommer, supprimer.
+
+### Temps de traitement attendus (estimations)
+
+Mesuré sur un ordinateur à 4 cœurs : 40 s d'audio en environ 5 à 9 s avec la
+qualité Rapide. Sur un téléphone de milieu de gamme, compter **2 à 4 fois plus
+lent** (estimation, pas encore mesuré sur le Redmi) :
+
+| Qualité | 1 minute d'audio | Mise en mémoire au démarrage |
+|---|---|---|
+| Rapide | environ 20 à 45 s | quelques secondes |
+| Équilibré | environ 45 s à 1 min 30 | 5 à 10 s |
+| Précis | environ 3 à 6 min | 20 à 40 s |
+
 ## Organisation des fichiers
 
 ```
-index.html          page d'accueil
-manifest.json       fiche d'identité de la PWA (nom, icônes, couleurs)
-sw.js               service worker : garde une copie de l'application pour le hors ligne
-.nojekyll           dit à GitHub Pages de publier les fichiers tels quels
-css/style.css       apparence (thème clair et sombre automatique)
-js/app.js           point de départ du JavaScript
-js/pwa/             installation de l'application et mode hors ligne
-icons/              icônes de l'application
+index.html            page unique de l'application
+manifest.json         fiche d'identité de la PWA (nom, icônes, couleurs)
+sw.js                 service worker : copie de l'application pour le hors ligne
+.nojekyll             dit à GitHub Pages de publier les fichiers tels quels
+css/style.css         apparence (thème clair et sombre automatique)
+js/app.js             point de départ du JavaScript
+js/config.js          qualités, langues, moteurs
+js/pwa/               installation de l'application et mode hors ligne
+js/stockage/          historique et réglages (sur l'appareil)
+js/audio/             micro, lecture des fichiers, découpage
+js/transcription/     modèle Whisper (Web Worker) et téléchargement avec reprise
+js/interface/         les différentes zones de l'écran
+js/outils/            petits outils (format des dates, écran allumé)
+vendor/transformers/  bibliothèques externes copiées telles quelles
+icons/                icônes de l'application
 ```
 
 ## Publier sur GitHub Pages
@@ -97,8 +133,9 @@ supplémentaire.
 ## Technologies
 
 - HTML, CSS et JavaScript « simple » (modules ES), sans framework.
-- [Transformers.js](https://huggingface.co/docs/transformers.js) pour faire
-  tourner Whisper dans le navigateur.
+- [Transformers.js](https://huggingface.co/docs/transformers.js) 4.3.0 pour faire
+  tourner Whisper dans le navigateur (copié dans `vendor/`, aucun site externe
+  n'est nécessaire à part Hugging Face pour le premier téléchargement du modèle).
 - Hébergement gratuit sur GitHub Pages.
 
 ## Licence

@@ -31,32 +31,142 @@
   <body>
     <main class="page">
       <header class="entete">
-        <img class="entete__icone" src="./icons/icon-192.png" alt="" width="72" height="72" />
-        <h1>Transcriptor</h1>
-        <p class="entete__intro">
-          Transformez la voix en texte. Tout se passe sur votre appareil : rien
-          n'est envoyé sur internet, et l'application fonctionne même hors ligne.
-        </p>
+        <img class="entete__icone" src="./icons/icon-192.png" alt="" width="56" height="56" />
+        <div>
+          <h1>Transcriptor</h1>
+          <p class="entete__intro">
+            La voix en texte, sur votre appareil. Rien n'est envoyé sur internet.
+          </p>
+        </div>
       </header>
 
-      <section class="actions" aria-label="Commencer une transcription">
-        <!-- Boutons désactivés pour l'instant : ils seront branchés plus tard -->
-        <button type="button" class="bouton bouton--principal" id="bouton-micro" disabled
-          aria-describedby="bientot">
-          🎙️ Enregistrer avec le micro
-        </button>
-        <button type="button" class="bouton" id="bouton-fichier" disabled
-          aria-describedby="bientot">
-          📁 Choisir un fichier audio
-        </button>
-        <p class="note" id="bientot">Ces fonctions arrivent bientôt.</p>
+      <!-- ====== 1. Le modèle de reconnaissance vocale ====== -->
+      <section class="carte" id="carte-modele" aria-labelledby="titre-modele">
+        <h2 id="titre-modele">Modèle de reconnaissance vocale</h2>
+        <p id="modele-texte">Vérification du modèle…</p>
+        <div id="modele-progression" class="progression" hidden>
+          <progress id="modele-barre" max="100"></progress>
+          <p id="modele-detail" class="petit"></p>
+        </div>
+        <div class="boutons">
+          <button type="button" class="bouton bouton--principal" id="bouton-telecharger" hidden>
+            ⬇️ Télécharger le modèle
+          </button>
+          <button type="button" class="bouton" id="bouton-pause" hidden>⏸️ Mettre en pause</button>
+        </div>
+        <p id="modele-message" class="message" role="status" hidden></p>
       </section>
+
+      <!-- ====== 2. Nouvelle transcription ====== -->
+      <section class="carte" id="carte-transcription" aria-labelledby="titre-transcription">
+        <h2 id="titre-transcription">Nouvelle transcription</h2>
+
+        <div id="zone-depart">
+          <label class="etiquette" for="choix-langue">Langue parlée dans l'audio</label>
+          <select id="choix-langue" class="liste-deroulante"></select>
+
+          <div class="boutons">
+            <button type="button" class="bouton bouton--principal" id="bouton-micro" disabled>
+              🎙️ Enregistrer avec le micro
+            </button>
+            <button type="button" class="bouton" id="bouton-fichier" disabled>
+              📁 Choisir un fichier audio
+            </button>
+            <!-- Champ caché : le bouton ci-dessus l'ouvre -->
+            <input
+              type="file"
+              id="champ-fichier"
+              accept="audio/*,.mp3,.wav,.m4a,.ogg,.oga,.opus,.webm,.aac,.flac"
+              hidden
+            />
+          </div>
+          <p id="aide-transcription" class="note">Le modèle doit d'abord être prêt (voir ci-dessus).</p>
+        </div>
+
+        <div id="zone-enregistrement" hidden>
+          <p class="chrono">
+            <span class="point-rouge" aria-hidden="true"></span>
+            Enregistrement en cours :
+            <strong id="chrono" aria-live="off">00:00</strong>
+          </p>
+          <div class="boutons">
+            <button type="button" class="bouton bouton--principal" id="bouton-arreter-enregistrement">
+              ⏹️ Arrêter et transcrire
+            </button>
+            <button type="button" class="bouton bouton--discret" id="bouton-annuler-enregistrement">
+              Annuler l'enregistrement
+            </button>
+          </div>
+        </div>
+
+        <div id="zone-traitement" hidden>
+          <p id="traitement-texte" class="gras">Lecture de l'audio…</p>
+          <progress id="traitement-barre" max="100"></progress>
+          <p id="traitement-detail" class="petit"></p>
+          <p class="petit">Gardez l'application ouverte et l'écran allumé pendant le traitement.</p>
+          <div class="boutons">
+            <button type="button" class="bouton" id="bouton-arreter-transcription">
+              Arrêter la transcription
+            </button>
+          </div>
+        </div>
+
+        <p id="transcription-message" class="message" role="status" hidden></p>
+      </section>
+
+      <!-- ====== 3. Résultat ====== -->
+      <section class="carte" id="carte-resultat" aria-labelledby="resultat-titre" hidden>
+        <h2 id="resultat-titre">Résultat</h2>
+        <p id="resultat-infos" class="petit"></p>
+        <div id="resultat-texte" class="texte-transcrit"></div>
+        <div class="boutons boutons--ligne">
+          <button type="button" class="bouton" id="bouton-copier">📋 Copier</button>
+          <button type="button" class="bouton" id="bouton-telecharger-txt">💾 Télécharger (.txt)</button>
+          <button type="button" class="bouton bouton--discret" id="bouton-effacer">🧹 Effacer</button>
+        </div>
+        <p id="resultat-message" class="message" role="status" hidden></p>
+      </section>
+
+      <!-- ====== 4. Historique ====== -->
+      <section class="carte" id="carte-historique" aria-labelledby="titre-historique">
+        <h2 id="titre-historique">Historique</h2>
+        <p id="historique-vide" class="note">Aucune transcription pour l'instant.</p>
+        <ul id="historique-liste" class="liste-historique"></ul>
+        <p id="historique-message" class="message" role="status" hidden></p>
+      </section>
+
+      <!-- ====== 5. Réglages (repliés par défaut) ====== -->
+      <details class="carte reglages" id="reglages">
+        <summary><h2>⚙️ Réglages</h2></summary>
+
+        <fieldset id="choix-qualite">
+          <legend>Qualité de la transcription</legend>
+          <!-- Rempli par js/interface/reglages.js -->
+        </fieldset>
+        <p class="petit">
+          Le moteur de calcul (environ 27 Mo) se télécharge en plus, une seule fois.
+        </p>
+
+        <fieldset id="choix-moteur">
+          <legend>Moteur de calcul</legend>
+          <!-- Rempli par js/interface/reglages.js -->
+        </fieldset>
+
+        <h3>Stockage</h3>
+        <p id="stockage-info" class="petit">Calcul de l'espace utilisé…</p>
+        <div class="boutons">
+          <button type="button" class="bouton bouton--discret" id="bouton-supprimer-modeles">
+            🗑️ Supprimer les modèles téléchargés
+          </button>
+        </div>
+        <p id="reglages-message" class="message" role="status" hidden></p>
+      </details>
 
       <!-- Caché par défaut ; il apparaît seulement si le navigateur
            propose l'installation (voir js/pwa/install-button.js) -->
       <section class="installation" id="zone-installation" hidden>
         <button type="button" class="bouton bouton--secondaire" id="bouton-installer">
-          ⬇️ Installer l'application
+          📲 Installer l'application
         </button>
       </section>
 

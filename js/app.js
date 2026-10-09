@@ -1,13 +1,333 @@
 // ==========================================================
 // Point d'entrée de l'application.
-// Ce fichier est chargé par index.html et démarre chaque partie.
+// Ce fichier relie les différentes parties entre elles :
+// l'interface (les « cartes »), le moteur de transcription,
+// le micro et l'historique.
 // ==========================================================
 
 import { enregistrerServiceWorker } from "./pwa/register-service-worker.js";
 import { preparerBoutonInstallation } from "./pwa/install-button.js";
+import { QUALITES } from "./config.js";
+import { lireReglages, enregistrerReglages } from "./stockage/reglages.js";
+import { ajouterTranscription } from "./stockage/historique.js";
+import { MoteurTranscription } from "./transcription/client-moteur.js";
+import { transcrireAudio } from "./transcription/transcrire-audio.js";
+import { regrouperEnPhrases } from "./transcription/assemblage.js";
+import { codeErreur } from "./transcription/erreurs.js";
+import { effacerTousLesTelechargements } from "./transcription/telechargement-reprise.js";
+import { decoderAudio } from "./audio/decoder-audio.js";
+import { Enregistreur } from "./audio/enregistreur.js";
+import { garderEcranAllume, laisserEcranSEteindre } from "./outils/anti-veille.js";
+import { formaterDate } from "./outils/format.js";
+import { creerCarteModele } from "./interface/carte-modele.js";
+import { creerCarteTranscription } from "./interface/carte-transcription.js";
+import { creerCarteResultat } from "./interface/carte-resultat.js";
+import { creerCarteHistorique } from "./interface/carte-historique.js";
+import { creerReglages } from "./interface/reglages.js";
 
-// Mode hors ligne : met les fichiers de l'application en réserve
-enregistrerServiceWorker();
+// ---------------------------------------------------------------
+// État de l'application
+// ---------------------------------------------------------------
+let reglages = lireReglages();
+let etatModele = "inconnu"; // absent | telechargement | pause | connexion-perdue | chargement | pret | erreur
+let progression = { recu: 0, total: 0 };
+let occupe = false;          // vrai pendant un enregistrement ou une transcription
+let demandeArret = false;    // l'utilisateur a demandé d'arrêter la transcription
+let minuteurChrono = null;
+const enregistreur = new Enregistreur();
 
-// Bouton « Installer l'application » (s'affiche seulement si possible)
+// ---------------------------------------------------------------
+// Mode hors ligne et installation
+// ---------------------------------------------------------------
+enregistrerServiceWorker({ estOccupe: () => occupe });
 preparerBoutonInstallation();
+
+// ---------------------------------------------------------------
+// Moteur de transcription (Web Worker)
+// ---------------------------------------------------------------
+const moteur = new MoteurTranscription({
+  surEtat(message) {
+    if (message.type === "verification") {
+      if (message.present) {
+        preparerModele(); // déjà téléchargé : on le charge en mémoire
+      } else {
+        changerEtat("absent");
+        carteModele.afficherAbsent({
+          qualite: reglages.qualite,
+          device: message.device,
+          dejaTelecharge: message.dejaTelecharge,
+        });
+      }
+      return;
+    }
+    if (message.etat === "verification") {
+      changerEtat("verification");
+      carteModele.afficherVerification();
+    } else if (message.etat === "chargement") {
+      changerEtat("chargement");
+      carteModele.afficherChargement();
+    } else if (message.etat === "pret") {
+      changerEtat("pret");
+      carteModele.afficherPret({ qualite: reglages.qualite, device: message.device, multiCoeurs: message.multiCoeurs });
+    }
+  },
+
+  surProgression(recu, total) {
+    progression = { recu, total };
+    changerEtat("telechargement");
+    carteModele.afficherTelechargement(recu, total);
+  },
+
+  surErreur(code) {
+    if (code === "pause") {
+      changerEtat("pause");
+      carteModele.afficherPause(progression.recu, progression.total);
+    } else if (code === "connexion") {
+      changerEtat("connexion-perdue");
+      carteModele.afficherConnexionPerdue(progression.recu, progression.total);
+    } else {
+      changerEtat("erreur");
+      carteModele.afficherErreur(code);
+    }
+  },
+
+  surInfo(code) {
+    if (code === "repli-processeur") {
+      carteModele.afficherInfo(
+        "La carte graphique n'a pas fonctionné sur ce téléphone : le processeur est utilisé à la place."
+      );
+    }
+  },
+});
+
+function modeleChoisi() {
+  return QUALITES[reglages.qualite].modele;
+}
+
+function verifierModele() {
+  changerEtat("verification");
+  carteModele.afficherVerification();
+  moteur.verifier(modeleChoisi(), reglages.moteur);
+}
+
+function preparerModele() {
+  // Demande au navigateur de ne pas effacer le modèle pour libérer de la place
+  navigator.storage?.persist?.().catch(() => {});
+  moteur.preparer(modeleChoisi(), reglages.moteur);
+}
+
+// Met à jour l'état et active / désactive ce qui doit l'être
+function changerEtat(nouvelEtat) {
+  etatModele = nouvelEtat;
+  carteTranscription.activer(etatModele === "pret" && !occupe);
+  // On ne change pas de modèle en plein téléchargement ou chargement
+  const reglagesModifiables = !occupe && !["verification", "telechargement", "chargement"].includes(etatModele);
+  interfaceReglages.activer(reglagesModifiables);
+}
+
+// La connexion revient : on relance le téléchargement interrompu
+window.addEventListener("online", () => {
+  if (etatModele === "connexion-perdue") preparerModele();
+  else if (etatModele === "absent") verifierModele();
+});
+
+// ---------------------------------------------------------------
+// Les cartes de l'interface
+// ---------------------------------------------------------------
+const carteModele = creerCarteModele({
+  surTelecharger: () => preparerModele(),
+  surPause: () => moteur.pause(),
+});
+
+const carteTranscription = creerCarteTranscription({
+  langueInitiale: reglages.langue,
+  surChangementLangue: (langue) => {
+    reglages = enregistrerReglages({ langue });
+  },
+  surMicro: demarrerEnregistrement,
+  surFichier: (fichier) => {
+    const titre = fichier.name.replace(/\.[^.]+$/, "") || "Fichier audio";
+    traiterAudio(fichier, { titre, source: "fichier" });
+  },
+  surArreterEnregistrement: arreterEnregistrement,
+  surAnnulerEnregistrement: annulerEnregistrement,
+  surArreterTranscription: () => {
+    demandeArret = true;
+  },
+});
+
+const carteResultat = creerCarteResultat();
+
+const carteHistorique = creerCarteHistorique({
+  surOuvrir: (transcription) => {
+    carteResultat.afficher(transcription);
+    carteResultat.montrer();
+  },
+  surSuppression: (id) => {
+    if (carteResultat.idAffiche === id) carteResultat.effacer();
+  },
+});
+
+const interfaceReglages = creerReglages({
+  reglages,
+  surChangement: (modifications) => {
+    reglages = enregistrerReglages(modifications);
+    verifierModele();
+  },
+  surSupprimerModeles: async () => {
+    moteur.arreter(); // libère la mémoire
+    for (const nom of await caches.keys()) {
+      // « transformers-cache » : nom du cache utilisé par Transformers.js
+      if (nom === "transformers-cache" || nom.startsWith("transcriptor-moteur-")) {
+        await caches.delete(nom);
+      }
+    }
+    await effacerTousLesTelechargements();
+    progression = { recu: 0, total: 0 };
+    verifierModele();
+  },
+});
+
+// ---------------------------------------------------------------
+// Enregistrement au micro
+// ---------------------------------------------------------------
+async function demarrerEnregistrement() {
+  carteTranscription.cacherMessage();
+  if (!Enregistreur.estDisponible()) {
+    carteTranscription.afficherErreur("micro-indisponible");
+    return;
+  }
+  try {
+    await enregistreur.demarrer();
+  } catch (erreur) {
+    console.error(erreur);
+    carteTranscription.afficherErreur(codeErreur(erreur));
+    return;
+  }
+  commencerTravail();
+  carteTranscription.afficherEnregistrement();
+  minuteurChrono = setInterval(() => carteTranscription.majChrono(enregistreur.duree), 500);
+}
+
+async function arreterEnregistrement() {
+  clearInterval(minuteurChrono);
+  const enregistrement = await enregistreur.arreter();
+  finirTravail();
+  if (!enregistrement || enregistrement.size === 0) {
+    carteTranscription.afficherErreur("fichier-vide");
+    return;
+  }
+  const titre = `Enregistrement du ${formaterDate(Date.now())}`;
+  await traiterAudio(enregistrement, { titre, source: "micro" });
+}
+
+function annulerEnregistrement() {
+  clearInterval(minuteurChrono);
+  enregistreur.annuler();
+  finirTravail();
+  carteTranscription.afficherDepart();
+}
+
+// ---------------------------------------------------------------
+// Transcription d'un audio (fichier ou enregistrement)
+// ---------------------------------------------------------------
+async function traiterAudio(fichierAudio, { titre, source }) {
+  commencerTravail();
+  demandeArret = false;
+  carteTranscription.afficherLecture();
+  let transcription = null;
+
+  try {
+    const audio = await decoderAudio(fichierAudio);
+    if (audio.duration < 0.3) {
+      carteTranscription.afficherErreur("fichier-vide");
+      return;
+    }
+
+    transcription = {
+      titre,
+      creeLe: Date.now(),
+      duree: audio.duration,
+      source,
+      langue: reglages.langue,
+      qualite: reglages.qualite,
+      phrases: [],
+      interrompue: false,
+    };
+    carteResultat.afficher(transcription, { enCours: true });
+
+    const { segments, interrompue } = await transcrireAudio(audio, {
+      moteur,
+      langue: reglages.langue,
+      doitArreter: () => demandeArret,
+      surAvancement: (segmentsObtenus, numero, total, resteEstime) => {
+        transcription.phrases = regrouperEnPhrases(segmentsObtenus);
+        carteResultat.afficher(transcription, { enCours: true });
+        carteTranscription.majAvancement(numero, total, resteEstime);
+      },
+    });
+    transcription.phrases = regrouperEnPhrases(segments);
+    transcription.interrompue = interrompue;
+
+    await sauvegarder(transcription);
+    carteResultat.afficher(transcription);
+    carteResultat.montrer();
+
+    if (transcription.phrases.length === 0) {
+      carteTranscription.afficherInfo(
+        "Aucune parole n'a été détectée. Vérifiez la langue choisie et que le son est assez fort."
+      );
+    } else if (interrompue) {
+      carteTranscription.afficherInfo("Transcription arrêtée. Le texte déjà obtenu est conservé dans l'historique.");
+    } else {
+      carteTranscription.afficherInfo("✓ Transcription terminée et enregistrée dans l'historique.");
+    }
+  } catch (erreur) {
+    console.error(erreur);
+    carteTranscription.afficherErreur(erreur.code ?? codeErreur(erreur));
+    // On garde quand même ce qui a déjà été transcrit
+    if (transcription?.phrases.length > 0) {
+      transcription.interrompue = true;
+      await sauvegarder(transcription);
+      carteResultat.afficher(transcription);
+    } else {
+      carteResultat.effacer();
+    }
+  } finally {
+    finirTravail();
+  }
+}
+
+// Enregistre dans l'historique (si le texte n'est pas vide)
+async function sauvegarder(transcription) {
+  if (transcription.phrases.length === 0) return;
+  try {
+    transcription.id = await ajouterTranscription(transcription);
+    await carteHistorique.rafraichir();
+  } catch (erreur) {
+    console.error("Sauvegarde impossible :", erreur);
+  }
+}
+
+function commencerTravail() {
+  occupe = true;
+  garderEcranAllume();
+  changerEtat(etatModele);
+}
+
+function finirTravail() {
+  occupe = false;
+  laisserEcranSEteindre();
+  changerEtat(etatModele);
+}
+
+// Évite de perdre un enregistrement en fermant la page par erreur
+window.addEventListener("beforeunload", (e) => {
+  if (occupe) e.preventDefault();
+});
+
+// ---------------------------------------------------------------
+// Démarrage
+// ---------------------------------------------------------------
+carteHistorique.rafraichir();
+verifierModele();
