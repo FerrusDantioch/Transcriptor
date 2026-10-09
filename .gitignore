@@ -1,0 +1,39 @@
+# Fichiers que Git doit ignorer (ne jamais les envoyer sur GitHub)
+
+# Fichiers système
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Réglages des éditeurs de code
+.vscode/
+.idea/
+*.swp
+*~
+
+# Dépendances et fichiers générés (si on en utilise un jour)
+node_modules/
+dist/
+build/
+.cache/
+
+# Journaux d'erreurs
+*.log
+npm-debug.log*
+
+# Fichiers secrets ou personnels
+.env
+.env.*
+
+# Modèles d'IA téléchargés en local (trop lourds pour Git)
+models/
+*.onnx
+*.bin
+
+# Fichiers audio et vidéo de test (lourds et parfois privés)
+*.wav
+*.mp3
+*.m4a
+*.ogg
+*.webm
+*.mp4
