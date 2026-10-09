@@ -1,0 +1,162 @@
+/* ==========================================================
+   Styles de Transcriptor
+   Principe : « mobile d'abord » (on dessine pour le téléphone,
+   puis on adapte pour les grands écrans).
+   ========================================================== */
+
+/* ---------- Couleurs du thème clair (par défaut) ----------
+   Les « variables » (--nom) permettent de changer toutes les
+   couleurs d'un coup pour le thème sombre. */
+:root {
+  --fond: #f7f7f5;
+  --surface: #ffffff;
+  --texte: #1a1a1a;
+  --texte-doux: #4a4a4a;
+  --bordure: #c9c9c4;
+  --accent: #1f5fa8;          /* bleu de l'application */
+  --accent-texte: #ffffff;    /* texte posé sur le bleu */
+  --focus: #b35c00;           /* contour visible quand on navigue au clavier */
+}
+
+/* ---------- Couleurs du thème sombre ----------
+   Appliquées automatiquement si le téléphone est en mode sombre. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fond: #121417;
+    --surface: #1d2025;
+    --texte: #f2f2f2;
+    --texte-doux: #c4c7cc;
+    --bordure: #4a4f57;
+    --accent: #8ab4f8;
+    --accent-texte: #0b1a2e;
+    --focus: #ffb86b;
+  }
+}
+
+/* ---------- Bases ---------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  /* Taille de texte de base : grande et lisible sur téléphone */
+  font-size: 112.5%; /* = 18 px */
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--fond);
+  color: var(--texte);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.5;
+}
+
+/* Colonne centrale : pleine largeur sur téléphone,
+   limitée en largeur sur ordinateur */
+.page {
+  max-width: 32rem;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 2rem;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* ---------- En-tête ---------- */
+.entete {
+  text-align: center;
+}
+
+.entete__icone {
+  border-radius: 1rem;
+}
+
+h1 {
+  margin: 0.5rem 0;
+  font-size: 2rem;
+  line-height: 1.2;
+}
+
+.entete__intro {
+  margin: 0;
+  color: var(--texte-doux);
+}
+
+/* ---------- Boutons ---------- */
+.actions,
+.installation {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.bouton {
+  /* Gros boutons, faciles à toucher avec le pouce */
+  width: 100%;
+  min-height: 3.5rem;
+  padding: 0.75rem 1rem;
+  border: 2px solid var(--accent);
+  border-radius: 0.75rem;
+  background: var(--surface);
+  color: var(--texte);
+  font: inherit;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.bouton--principal {
+  background: var(--accent);
+  color: var(--accent-texte);
+}
+
+.bouton--secondaire {
+  border-style: dashed;
+}
+
+/* Contour bien visible quand le bouton est sélectionné au clavier */
+.bouton:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+
+/* Bouton désactivé : grisé, mais le texte reste lisible */
+.bouton:disabled {
+  cursor: not-allowed;
+  background: var(--surface);
+  color: var(--texte-doux);
+  border-color: var(--bordure);
+  border-style: solid;
+}
+
+.note {
+  margin: 0;
+  text-align: center;
+  color: var(--texte-doux);
+  font-size: 0.95rem;
+}
+
+/* ---------- Pied de page ---------- */
+.pied {
+  margin-top: auto; /* pousse le pied de page en bas de l'écran */
+  text-align: center;
+  color: var(--texte-doux);
+  font-size: 0.9rem;
+}
+
+.pied p {
+  margin: 0;
+}
+
+/* Respecte le réglage « réduire les animations » du téléphone */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

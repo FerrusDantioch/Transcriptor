@@ -51,6 +51,28 @@ Feuille de route :
 4. Si un choix technique est **risqué ou limité** (ex. performances sur téléphone),
    le dire honnêtement et proposer une alternative.
 
+## Organisation des fichiers
+
+```
+index.html          page d'accueil
+manifest.json       fiche d'identité de la PWA (nom, icônes, couleurs)
+sw.js               service worker (mode hors ligne) — doit rester à la racine
+.nojekyll           dit à GitHub Pages de publier les fichiers tels quels
+css/style.css       styles (thème clair/sombre automatique)
+js/app.js           point d'entrée JavaScript
+js/pwa/             tout ce qui concerne l'installation et le hors ligne
+icons/              icônes 192 et 512 px (« any » et « maskable »)
+```
+
+## Règles à ne pas oublier
+
+- **Chemins toujours relatifs** (`./css/style.css`, jamais `/css/style.css`) :
+  le site est publié dans un sous-dossier sur GitHub Pages.
+- **À chaque modification d'un fichier de l'application**, augmenter
+  `VERSION_CACHE` dans `sw.js` (v1 → v2…), sinon les téléphones gardent
+  l'ancienne version. Tout nouveau fichier doit aussi être ajouté à la
+  liste `FICHIERS_APPLICATION` de `sw.js`.
+
 ## Points de vigilance connus
 
 - **Performances sur téléphone** : utiliser de petits modèles Whisper
