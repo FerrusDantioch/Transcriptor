@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <!-- Adapte la page à la largeur de l'écran du téléphone -->
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Transcriptor</title>
+    <meta
+      name="description"
+      content="Transforme la voix en texte, directement sur votre appareil, même hors ligne."
+    />
+
+    <!-- Indique au navigateur que la page gère le thème clair et le thème sombre -->
+    <meta name="color-scheme" content="light dark" />
+    <!-- Couleur de la barre d'état du téléphone, selon le thème -->
+    <meta name="theme-color" content="#f7f7f5" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#121417" media="(prefers-color-scheme: dark)" />
+
+    <!-- Fiche d'identité de l'application (nom, icônes, couleurs…) -->
+    <!-- Tous les chemins commencent par "./" : ils restent valables même
+         quand le site est dans un sous-dossier, comme sur GitHub Pages. -->
+    <link rel="manifest" href="./manifest.json" />
+    <link rel="icon" href="./icons/icon-192.png" type="image/png" />
+    <link rel="apple-touch-icon" href="./icons/icon-192.png" />
+
+    <link rel="stylesheet" href="./css/style.css" />
+    <!-- type="module" : permet de découper le JavaScript en plusieurs fichiers -->
+    <script type="module" src="./js/app.js"></script>
+  </head>
+
+  <body>
+    <main class="page">
+      <header class="entete">
+        <img class="entete__icone" src="./icons/icon-192.png" alt="" width="72" height="72" />
+        <h1>Transcriptor</h1>
+        <p class="entete__intro">
+          Transformez la voix en texte. Tout se passe sur votre appareil : rien
+          n'est envoyé sur internet, et l'application fonctionne même hors ligne.
+        </p>
+      </header>
+
+      <section class="actions" aria-label="Commencer une transcription">
+        <!-- Boutons désactivés pour l'instant : ils seront branchés plus tard -->
+        <button type="button" class="bouton bouton--principal" id="bouton-micro" disabled
+          aria-describedby="bientot">
+          🎙️ Enregistrer avec le micro
+        </button>
+        <button type="button" class="bouton" id="bouton-fichier" disabled
+          aria-describedby="bientot">
+          📁 Choisir un fichier audio
+        </button>
+        <p class="note" id="bientot">Ces fonctions arrivent bientôt.</p>
+      </section>
+
+      <!-- Caché par défaut ; il apparaît seulement si le navigateur
+           propose l'installation (voir js/pwa/install-button.js) -->
+      <section class="installation" id="zone-installation" hidden>
+        <button type="button" class="bouton bouton--secondaire" id="bouton-installer">
+          ⬇️ Installer l'application
+        </button>
+      </section>
+
+      <footer class="pied">
+        <!-- Message mis à jour par js/pwa/register-service-worker.js -->
+        <p id="etat-hors-ligne" role="status">Préparation du mode hors ligne…</p>
+      </footer>
+    </main>
+  </body>
+</html>

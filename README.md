@@ -12,7 +12,8 @@
 - 🇫🇷 Interface en français ; transcription en français par défaut, avec
   d'autres langues au choix.
 
-> **État actuel :** le projet démarre. L'application n'est pas encore codée.
+> **État actuel :** le socle de l'application est en place (page d'accueil,
+> installation, mode hors ligne). La transcription n'est pas encore codée.
 
 ## Feuille de route
 
@@ -65,6 +66,33 @@ Le micro ne fonctionne que sur une adresse sécurisée (`https://`) ou sur
 `localhost`. Le plus simple pour tester sur le téléphone sera donc la version
 publiée sur **GitHub Pages** (en `https://`), que nous mettrons en place
 plus tard.
+
+## Organisation des fichiers
+
+```
+index.html          page d'accueil
+manifest.json       fiche d'identité de la PWA (nom, icônes, couleurs)
+sw.js               service worker : garde une copie de l'application pour le hors ligne
+.nojekyll           dit à GitHub Pages de publier les fichiers tels quels
+css/style.css       apparence (thème clair et sombre automatique)
+js/app.js           point de départ du JavaScript
+js/pwa/             installation de l'application et mode hors ligne
+icons/              icônes de l'application
+```
+
+## Publier sur GitHub Pages
+
+1. Sur GitHub, ouvrez le dépôt, puis **Settings** (Paramètres) → **Pages**.
+2. Dans **Build and deployment** → **Source**, choisissez **Deploy from a branch**.
+3. Dans **Branch**, choisissez la branche à publier et le dossier **/ (root)**,
+   puis cliquez sur **Save**.
+4. Attendez 1 à 2 minutes, puis rechargez la page **Settings → Pages** :
+   l'adresse du site s'affiche en haut (par exemple
+   `https://ferrusdantioch.github.io/Transcriptor/`).
+
+Tous les chemins du projet sont **relatifs** (ils commencent par `./`) : le
+site fonctionne donc dans le sous-dossier `/Transcriptor/` sans réglage
+supplémentaire.
 
 ## Technologies
 
