@@ -6,7 +6,8 @@
 // calculs lourds sans jamais figer l'interface.
 //
 // La page et le worker se parlent par messages :
-//   page → worker : { type: "verifier" | "preparer" | "pause" | "transcrire", … }
+//   page → worker : { type: "verifier" | "preparer" | "pause" | "transcrire"
+//                      | "verifierVoix" | "preparerVoix" | "analyserVoix" | "regrouperVoix", … }
 //   worker → page : { type: "etat" | "progression" | "resultat" | "erreur", … }
 // ==========================================================
 
@@ -18,6 +19,13 @@ import {
   ErreurConnexion,
 } from "./telechargement-reprise.js";
 import { codeErreur } from "./erreurs.js";
+import {
+  fichiersModelesVoix,
+  chargerModelesVoix,
+  modelesVoixCharges,
+  analyserFenetre,
+} from "../voix/analyse-voix.js";
+import { regrouperEmpreintes } from "../voix/regroupement.js";
 
 const TACHE = "automatic-speech-recognition";
 
@@ -58,6 +66,10 @@ self.addEventListener("message", async (evenement) => {
     else if (message.type === "preparer") await preparer(message);
     else if (message.type === "pause") controleur?.abort(new DOMException("Pause", "AbortError"));
     else if (message.type === "transcrire") await transcrire(message);
+    else if (message.type === "verifierVoix") envoyer({ type: "resultat", id: message.id, present: await voixEnCache() });
+    else if (message.type === "preparerVoix") await preparerVoix(message);
+    else if (message.type === "analyserVoix") await analyserVoix(message);
+    else if (message.type === "regrouperVoix") regrouperVoix(message);
   } catch (erreur) {
     const code = codeErreur(erreur);
     // Pause et coupure de connexion sont prévues : inutile de les signaler en rouge
@@ -181,7 +193,9 @@ async function charger(modele, device, encodeur) {
   envoyer({ type: "etat", etat: "pret", device, coeurs: coeursUtilises() });
 }
 
-async function telechargerTout(liste, dejaEnCache) {
+// « cible » indique à la page quelle barre de progression mettre à jour
+// (« modele » : Whisper ; « voix » : modèles de reconnaissance des voix)
+async function telechargerTout(liste, dejaEnCache, cible = "modele") {
   const total = dejaEnCache + liste.reduce((somme, f) => somme + (f.taille || 0), 0);
   let termine = dejaEnCache; // octets des fichiers déjà complets
 
@@ -189,7 +203,7 @@ async function telechargerTout(liste, dejaEnCache) {
     const blob = await telechargerAvecReprise(fichier.url, {
       signal: controleur.signal,
       surProgression: (recu) => {
-        envoyer({ type: "progression", recu: termine + recu, total });
+        envoyer({ type: "progression", recu: termine + recu, total, cible });
       },
     });
     // On range le fichier complet dans le Cache du navigateur
@@ -207,7 +221,7 @@ async function telechargerTout(liste, dejaEnCache) {
     // … puis on supprime les morceaux devenus inutiles
     await effacerTelechargement(fichier.url);
     termine += fichier.taille || blob.size;
-    envoyer({ type: "progression", recu: termine, total });
+    envoyer({ type: "progression", recu: termine, total, cible });
   }
 
   // Ménage : anciennes versions du moteur
@@ -222,7 +236,28 @@ async function telechargerTout(liste, dejaEnCache) {
 async function transcrire({ id, audio, langue }) {
   if (!transcripteur) throw new Error("Le modèle n'est pas chargé.");
   const duree = audio.length / 16000; // en secondes
-  const sortie = await transcripteur(audio, {
+  let sortie;
+  try {
+    sortie = await appelerWhisper(audio, langue, duree);
+  } catch (erreur) {
+    // Whisper n'a produit aucun mot pour ce morceau (bruit, musique…) :
+    // la bibliothèque plante au lieu de renvoyer un texte vide. On l'ignore.
+    if (String(erreur?.message).includes("token_ids must be a non-empty array")) {
+      envoyer({ type: "resultat", id, segments: [], texte: "" });
+      return;
+    }
+    throw erreur;
+  }
+  const segments = (sortie.chunks || []).map((c) => ({
+    debut: c.timestamp?.[0] ?? null,
+    fin: c.timestamp?.[1] ?? null,
+    texte: c.text,
+  }));
+  envoyer({ type: "resultat", id, segments, texte: sortie.text });
+}
+
+function appelerWhisper(audio, langue, duree) {
+  return transcripteur(audio, {
     language: langue,
     task: "transcribe",
     return_timestamps: true,
@@ -233,12 +268,61 @@ async function transcrire({ id, audio, langue }) {
     no_repeat_ngram_size: 4,
     max_new_tokens: Math.min(400, Math.ceil(duree * 8) + 20),
   });
-  const segments = (sortie.chunks || []).map((c) => ({
-    debut: c.timestamp?.[0] ?? null,
-    fin: c.timestamp?.[1] ?? null,
-    texte: c.text,
-  }));
-  envoyer({ type: "resultat", id, segments, texte: sortie.text });
+}
+
+// ---------------------------------------------------------------
+// 4) Reconnaissance des intervenants (voir js/voix/)
+// ---------------------------------------------------------------
+
+// Les modèles de voix sont-ils tous dans le cache ?
+async function voixEnCache() {
+  const cache = await caches.open(env.cacheKey);
+  for (const url of fichiersModelesVoix()) {
+    if (!(await cache.match(url))) return false;
+  }
+  return true;
+}
+
+// Télécharge (si besoin, avec reprise) puis charge les modèles de voix.
+// « charger: false » : téléchargement seul (bouton « Télécharger maintenant »).
+// Le chargement exige que Whisper soit déjà chargé : le moteur de calcul est
+// alors démarré avec le bon nombre de cœurs (réglage « Vitesse »).
+async function preparerVoix({ id, charger = true }) {
+  if (!modelesVoixCharges()) {
+    const cache = await caches.open(env.cacheKey);
+    const liste = [];
+    let dejaEnCache = 0;
+    for (const url of fichiersModelesVoix()) {
+      const garde = await cache.match(url);
+      if (garde) dejaEnCache += tailleReponse(garde);
+      else liste.push({ url, cache: env.cacheKey, taille: await tailleFichier(url) });
+    }
+    if (liste.length > 0) {
+      if (!navigator.onLine) throw new ErreurHorsLigne();
+      controleur = new AbortController();
+      try {
+        await telechargerTout(liste, dejaEnCache, "voix");
+      } finally {
+        controleur = null;
+      }
+    }
+    if (charger) {
+      if (!transcripteur) throw new Error("Le modèle de transcription doit être chargé avant les modèles de voix.");
+      await chargerModelesVoix();
+    }
+  }
+  envoyer({ type: "resultat", id });
+}
+
+async function analyserVoix({ id, audio, decalage }) {
+  const elements = await analyserFenetre(audio, decalage);
+  // Les empreintes (listes de nombres) sont « transférées » à la page sans copie
+  const transferts = elements.filter((e) => e.empreinte).map((e) => e.empreinte.buffer);
+  self.postMessage({ type: "resultat", id, elements }, transferts);
+}
+
+function regrouperVoix({ id, elements, nombreVoix }) {
+  envoyer({ type: "resultat", id, etiquettes: regrouperEmpreintes(elements, nombreVoix) });
 }
 
 // ---------------------------------------------------------------
