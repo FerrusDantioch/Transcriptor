@@ -88,8 +88,11 @@ async function verifier({ modele, moteur }) {
 // ---------------------------------------------------------------
 // 2) Préparer : télécharger si besoin, puis charger en mémoire
 // ---------------------------------------------------------------
-async function preparer({ modele, moteur }) {
+async function preparer({ modele, moteur, coeurs }) {
   controleur = new AbortController();
+  // Nombre de cœurs du processeur : n'a d'effet qu'avant le tout premier
+  // chargement (pour en changer, la page relance un worker neuf)
+  if (!transcripteur) env.backends.onnx.wasm.numThreads = coeurs || 2;
   const device = await choisirDevice(moteur);
   try {
     await charger(modele, device);
@@ -113,7 +116,7 @@ async function charger(modele, device) {
 
   // Déjà chargé avec les mêmes réglages : rien à faire
   if (transcripteur && configChargee?.modele === modele && configChargee?.device === device) {
-    envoyer({ type: "etat", etat: "pret", device, multiCoeurs: self.crossOriginIsolated });
+    envoyer({ type: "etat", etat: "pret", device, coeurs: coeursUtilises() });
     return;
   }
 
@@ -169,7 +172,7 @@ async function charger(modele, device) {
 
   transcripteur = nouveau;
   configChargee = { modele, device };
-  envoyer({ type: "etat", etat: "pret", device, multiCoeurs: self.crossOriginIsolated });
+  envoyer({ type: "etat", etat: "pret", device, coeurs: coeursUtilises() });
 }
 
 async function telechargerTout(liste, dejaEnCache) {
@@ -270,6 +273,11 @@ async function modeleEnCache(modele, device) {
   } catch {
     return false;
   }
+}
+
+// Nombre de cœurs réellement utilisés (1 si le calcul multi-cœurs est impossible)
+function coeursUtilises() {
+  return self.crossOriginIsolated ? env.backends.onnx.wasm.numThreads || 1 : 1;
 }
 
 // Taille d'un fichier rangé dans le cache

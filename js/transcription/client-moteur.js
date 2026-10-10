@@ -84,9 +84,10 @@ export class MoteurTranscription {
   }
 
   // Télécharge (si besoin) puis charge le modèle en mémoire
-  preparer(modele, moteur) {
+  // « coeurs » : nombre de cœurs du processeur à utiliser
+  preparer(modele, moteur, coeurs) {
     this.assurerWorker();
-    this.worker.postMessage({ type: "preparer", modele, moteur });
+    this.worker.postMessage({ type: "preparer", modele, moteur, coeurs });
   }
 
   // Met le téléchargement en pause

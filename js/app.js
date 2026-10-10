@@ -7,7 +7,7 @@
 
 import { enregistrerServiceWorker } from "./pwa/register-service-worker.js";
 import { preparerBoutonInstallation } from "./pwa/install-button.js";
-import { QUALITES } from "./config.js";
+import { QUALITES, nombreDeCoeurs } from "./config.js";
 import { lireReglages, enregistrerReglages } from "./stockage/reglages.js";
 import { ajouterTranscription } from "./stockage/historique.js";
 import { MoteurTranscription } from "./transcription/client-moteur.js";
@@ -68,7 +68,7 @@ const moteur = new MoteurTranscription({
       carteModele.afficherChargement();
     } else if (message.etat === "pret") {
       changerEtat("pret");
-      carteModele.afficherPret({ qualite: reglages.qualite, device: message.device, multiCoeurs: message.multiCoeurs });
+      carteModele.afficherPret({ qualite: reglages.qualite, device: message.device, coeurs: message.coeurs });
     }
   },
 
@@ -113,7 +113,7 @@ function verifierModele() {
 function preparerModele() {
   // Demande au navigateur de ne pas effacer le modèle pour libérer de la place
   navigator.storage?.persist?.().catch(() => {});
-  moteur.preparer(modeleChoisi(), reglages.moteur);
+  moteur.preparer(modeleChoisi(), reglages.moteur, nombreDeCoeurs(reglages.vitesse));
 }
 
 // Met à jour l'état et active / désactive ce qui doit l'être
@@ -172,6 +172,9 @@ const interfaceReglages = creerReglages({
   reglages,
   surChangement: (modifications) => {
     reglages = enregistrerReglages(modifications);
+    // Changer de moteur ou de vitesse demande un worker neuf
+    // (le nombre de cœurs ne peut être choisi qu'au démarrage du moteur)
+    if ("moteur" in modifications || "vitesse" in modifications) moteur.arreter();
     verifierModele();
   },
   surSupprimerModeles: async () => {

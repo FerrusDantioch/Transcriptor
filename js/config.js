@@ -34,21 +34,46 @@ export const TAILLE_MOTEUR_MO = 27;
 
 // Choix du moteur de calcul
 export const MOTEURS = {
+  wasm: {
+    nom: "Processeur (recommandé)",
+    description: "Fonctionne partout. Le plus fiable, et le téléphone reste utilisable.",
+  },
   auto: {
     nom: "Automatique",
-    description: "Utilise la carte graphique si le téléphone le permet, sinon le processeur.",
-  },
-  wasm: {
-    nom: "Processeur",
-    description: "Fonctionne partout. Le plus fiable.",
+    description:
+      "Utilise la carte graphique si le téléphone le permet. Déconseillé : l'écran peut devenir saccadé.",
   },
   webgpu: {
     nom: "Carte graphique (WebGPU)",
-    description: "Peut être plus rapide, mais expérimental sur téléphone. Téléchargement 2 à 3 fois plus lourd.",
+    description:
+      "Expérimental. La carte graphique sert aussi à afficher l'écran : le téléphone peut presque se figer. " +
+      "Téléchargement 2 à 3 fois plus lourd.",
   },
 };
 
-export const MOTEUR_PAR_DEFAUT = "auto";
+export const MOTEUR_PAR_DEFAUT = "wasm";
+
+// Nombre de cœurs du processeur utilisés pour le calcul.
+// Le téléphone en a souvent 8 : en laisser assez libres garde l'écran fluide.
+export const VITESSES = {
+  douce: {
+    nom: "Douce (recommandée)",
+    description: "2 cœurs : un peu plus lent, mais le téléphone reste utilisable pendant le calcul.",
+  },
+  maximale: {
+    nom: "Maximale",
+    description: "Jusqu'à 4 cœurs : plus rapide, mais le téléphone peut ralentir fortement, voire se figer.",
+  },
+};
+
+export const VITESSE_PAR_DEFAUT = "douce";
+
+// Calcule le nombre de cœurs à utiliser selon la vitesse choisie
+export function nombreDeCoeurs(vitesse) {
+  const coeurs = navigator.hardwareConcurrency || 2;
+  if (vitesse === "maximale") return Math.min(4, Math.ceil(coeurs / 2));
+  return coeurs >= 4 ? 2 : 1;
+}
 
 // Langues proposées. Le code (« fr », « en »…) est celui qu'attend Whisper.
 // Remarque : Whisper ne détecte pas la langue tout seul dans cette

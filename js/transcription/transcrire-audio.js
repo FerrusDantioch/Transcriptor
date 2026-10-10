@@ -6,6 +6,10 @@ import { extraireMono } from "../audio/decoder-audio.js";
 import { decouperEnMorceaux, estSilencieux } from "../audio/decoupage.js";
 import { placerSegments } from "./assemblage.js";
 
+// Courte pause entre deux morceaux : laisse le téléphone « respirer »
+// (affichage, autres applications). Négligeable face aux ~28 s d'un morceau.
+const PAUSE_ENTRE_MORCEAUX = 300; // millisecondes
+
 /**
  * @param {AudioBuffer} audio audio décodé à 16 kHz
  * @param {object} options
@@ -42,6 +46,7 @@ export async function transcrireAudio(audio, { moteur, langue, surAvancement, do
     const audioRestant = audio.duration - morceau.fin;
     const resteEstime = audioTraite > 0 ? (tempsCalcul / 1000 / audioTraite) * audioRestant : null;
     surAvancement(segments, i + 1, morceaux.length, resteEstime);
+    if (i < morceaux.length - 1) await new Promise((r) => setTimeout(r, PAUSE_ENTRE_MORCEAUX));
   }
 
   return { segments, interrompue: false };
