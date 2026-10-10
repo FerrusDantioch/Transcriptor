@@ -91,6 +91,11 @@ plus tard.
 - Résultat **horodaté par phrase**, boutons **Copier**, **Télécharger (.txt)**,
   **Effacer**.
 - **Historique** sur l'appareil : ouvrir, renommer, supprimer.
+- **Reconnaissance des intervenants** (interrupteur) : le texte est présenté par
+  blocs « Intervenant 1 », « Intervenant 2 »… (couleur + nom), jusqu'à 6 voix.
+  Nombre de personnes : automatique ou de 2 à 6 (plus fiable). Modèles de voix
+  ≈ 32 Mo, téléchargés une fois. En cas d'échec, le texte est gardé sans
+  distinction de voix.
 
 ### Temps de traitement attendus (estimations)
 
@@ -121,6 +126,8 @@ js/audio/             micro, lecture des fichiers, découpage
 js/transcription/     modèle Whisper (Web Worker) et téléchargement avec reprise
 js/interface/         les différentes zones de l'écran
 js/outils/            petits outils (format des dates, écran allumé)
+js/voix/              reconnaissance des intervenants
+modeles/voix/         modèles de voix (pyannote, WeSpeaker) et leurs licences
 vendor/transformers/  bibliothèques externes copiées telles quelles
 icons/                icônes de l'application
 ```

@@ -65,6 +65,38 @@
           <label class="etiquette" for="choix-langue">Langue parlée dans l'audio</label>
           <select id="choix-langue" class="liste-deroulante"></select>
 
+          <!-- Interrupteur : reconnaître qui parle (« Intervenant 1 », « Intervenant 2 »…) -->
+          <div class="interrupteur">
+            <input type="checkbox" id="choix-intervenants" role="switch" />
+            <label for="choix-intervenants">
+              <strong>Reconnaître les intervenants</strong>
+              <span class="petit">Sépare le texte par personne : « Intervenant 1 », « Intervenant 2 »…</span>
+            </label>
+          </div>
+          <div id="zone-intervenants" class="zone-intervenants" hidden>
+            <label class="etiquette" for="nombre-voix">Nombre de personnes qui parlent</label>
+            <select id="nombre-voix" class="liste-deroulante">
+              <option value="auto">Automatique</option>
+              <option value="2">2 personnes</option>
+              <option value="3">3 personnes</option>
+              <option value="4">4 personnes</option>
+              <option value="5">5 personnes</option>
+              <option value="6">6 personnes</option>
+            </select>
+            <p class="petit">
+              Plus fiable si vous indiquez le nombre exact. Fonctionne mieux quand les personnes
+              ne parlent pas en même temps, sans bruit de fond. Ajoute environ 15 à 30 % de temps de calcul.
+            </p>
+            <p id="voix-etat" class="petit"></p>
+            <progress id="voix-barre" max="100" hidden></progress>
+            <div class="boutons">
+              <button type="button" class="bouton bouton--petit" id="bouton-telecharger-voix" hidden>
+                ⬇️ Télécharger maintenant (≈ 32 Mo)
+              </button>
+            </div>
+            <p id="voix-avertissement" class="message" data-type="erreur" hidden></p>
+          </div>
+
           <div class="boutons">
             <button type="button" class="bouton bouton--principal" id="bouton-micro" disabled>
               🎙️ Enregistrer avec le micro

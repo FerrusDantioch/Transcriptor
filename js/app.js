@@ -24,6 +24,10 @@ import { creerCarteTranscription } from "./interface/carte-transcription.js";
 import { creerCarteResultat } from "./interface/carte-resultat.js";
 import { creerCarteHistorique } from "./interface/carte-historique.js";
 import { creerReglages } from "./interface/reglages.js";
+import { creerZoneIntervenants } from "./interface/zone-intervenants.js";
+import { texteEchecVoix } from "./interface/messages.js";
+import { diariserAudio } from "./voix/diariser-audio.js";
+import { attribuerIntervenants } from "./voix/attribution.js";
 
 // ---------------------------------------------------------------
 // État de l'application
@@ -84,7 +88,13 @@ const moteur = new MoteurTranscription({
     }
   },
 
-  surProgression(recu, total) {
+  surProgression(recu, total, cible) {
+    // Téléchargement des modèles de voix : affiché à part
+    if (cible === "voix") {
+      if (occupe) carteTranscription.afficherTelechargementVoix(recu, total);
+      else zoneIntervenants.afficherTelechargement(recu, total);
+      return;
+    }
     progression = { recu, total };
     changerEtat("telechargement");
     carteModele.afficherTelechargement(recu, total);
@@ -169,6 +179,7 @@ function changerEtat(nouvelEtat) {
   // On ne change pas de modèle en plein téléchargement ou chargement
   const reglagesModifiables = !occupe && !["verification", "telechargement", "chargement"].includes(etatModele);
   interfaceReglages.activer(reglagesModifiables);
+  zoneIntervenants.activer(!occupe);
 }
 
 // La connexion revient : on relance le téléchargement interrompu
@@ -201,6 +212,34 @@ const carteTranscription = creerCarteTranscription({
     demandeArret = true;
   },
 });
+
+const zoneIntervenants = creerZoneIntervenants({
+  intervenants: reglages.intervenants,
+  nombreVoix: reglages.nombreVoix,
+  surChangement: (modifications) => {
+    reglages = enregistrerReglages(modifications);
+    if (modifications.intervenants) verifierModelesVoix();
+  },
+  surTelecharger: telechargerModelesVoix,
+});
+
+// Les modèles de voix sont-ils déjà téléchargés ?
+function verifierModelesVoix() {
+  moteur
+    .demander("verifierVoix")
+    .then(({ present }) => zoneIntervenants.afficherEtat({ present }))
+    .catch((erreur) => console.error(erreur));
+}
+
+// Bouton « Télécharger maintenant » : téléchargement seul (sans chargement en mémoire)
+function telechargerModelesVoix() {
+  navigator.storage?.persist?.().catch(() => {});
+  zoneIntervenants.afficherTelechargement(0, 0);
+  moteur
+    .demander("preparerVoix", { charger: false })
+    .then(() => zoneIntervenants.afficherEtat({ present: true }))
+    .catch((erreur) => zoneIntervenants.afficherErreur(erreur.code ?? codeErreur(erreur)));
+}
 
 const carteResultat = creerCarteResultat();
 
@@ -323,7 +362,36 @@ async function traiterAudio(fichierAudio, { titre, source }) {
         carteTranscription.majAvancement(numero, total, resteEstime);
       },
     });
-    transcription.phrases = regrouperEnPhrases(segments);
+    // Reconnaissance des intervenants (si l'interrupteur est activé).
+    // En cas d'échec, on garde simplement le texte sans distinction de voix.
+    let segmentsFinaux = segments;
+    let infoVoix = null;
+    if (zoneIntervenants.actif && !interrompue && segments.length > 0) {
+      try {
+        const tours = await diariserAudio(audio, {
+          moteur,
+          nombreVoix: zoneIntervenants.nombreVoix,
+          doitArreter: () => demandeArret,
+          surAvancement: (numero, total) => carteTranscription.majDiarisation(numero, total),
+        });
+        if (tours === null) {
+          infoVoix = "Reconnaissance des intervenants arrêtée : le texte est conservé, sans distinction de voix.";
+        } else {
+          const { segments: attribues, nombre } = attribuerIntervenants(segments, tours);
+          if (nombre > 0) {
+            segmentsFinaux = attribues;
+            transcription.intervenants = Array.from({ length: nombre }, (_, i) => ({ nom: `Intervenant ${i + 1}` }));
+          } else {
+            infoVoix = "Aucune voix n'a pu être distinguée : le texte est conservé tel quel.";
+          }
+        }
+      } catch (erreur) {
+        console.warn("Reconnaissance des intervenants impossible :", erreur);
+        infoVoix = texteEchecVoix(erreur.code ?? codeErreur(erreur));
+      }
+    }
+
+    transcription.phrases = regrouperEnPhrases(segmentsFinaux);
     transcription.interrompue = interrompue;
 
     await sauvegarder(transcription);
@@ -336,6 +404,8 @@ async function traiterAudio(fichierAudio, { titre, source }) {
       );
     } else if (interrompue) {
       carteTranscription.afficherInfo("Transcription arrêtée. Le texte déjà obtenu est conservé dans l'historique.");
+    } else if (infoVoix) {
+      carteTranscription.afficherInfo(`✓ Transcription terminée et enregistrée dans l'historique. ${infoVoix}`);
     } else {
       carteTranscription.afficherInfo("✓ Transcription terminée et enregistrée dans l'historique.");
     }
@@ -390,3 +460,4 @@ window.addEventListener("beforeunload", (e) => {
 // ---------------------------------------------------------------
 carteHistorique.rafraichir();
 verifierModele();
+if (reglages.intervenants) verifierModelesVoix();

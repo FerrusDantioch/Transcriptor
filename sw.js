@@ -10,12 +10,13 @@
 // ⚠️ À CHAQUE MODIFICATION d'un fichier de l'application, augmenter ce
 // numéro (v1 → v2 → v3…). Sinon les téléphones garderont l'ancienne
 // version en réserve.
-const VERSION_CACHE = "transcriptor-app-v6";
+const VERSION_CACHE = "transcriptor-app-v7";
 
 // Liste des fichiers à garder en réserve.
 // Chemins relatifs : ils fonctionnent aussi dans le sous-dossier GitHub Pages.
-// (Le gros fichier du moteur de calcul, ort-wasm-…wasm, n'est pas dans
-// cette liste : il est téléchargé avec le modèle, avec reprise possible.)
+// (Le gros fichier du moteur de calcul, ort-wasm-…wasm, et les modèles de
+// voix du dossier modeles/ ne sont pas dans cette liste : ils sont
+// téléchargés à part, avec reprise possible.)
 const FICHIERS_APPLICATION = [
   "./",
   "./index.html",
@@ -43,6 +44,11 @@ const FICHIERS_APPLICATION = [
   "./js/interface/carte-transcription.js",
   "./js/interface/messages.js",
   "./js/interface/reglages.js",
+  "./js/interface/zone-intervenants.js",
+  "./js/voix/analyse-voix.js",
+  "./js/voix/attribution.js",
+  "./js/voix/diariser-audio.js",
+  "./js/voix/regroupement.js",
   "./js/outils/anti-veille.js",
   "./js/outils/format.js",
   "./vendor/transformers/transformers.min.js",

@@ -39,6 +39,23 @@ const TEXTES_ERREUR = {
   inconnue: "Un problème inattendu est survenu. Réessayez ; si cela recommence, rechargez la page.",
 };
 
+// Message quand la reconnaissance des intervenants échoue : le texte est gardé
+export function texteEchecVoix(code) {
+  const raisons = {
+    "hors-ligne": "les modèles des voix ne sont pas encore téléchargés et vous êtes hors ligne",
+    connexion: "la connexion a été perdue pendant le téléchargement des modèles des voix",
+    memoire: "le téléphone manque de mémoire",
+    plantage: "le téléphone manque de mémoire",
+    espace: "il n'y a plus assez d'espace de stockage",
+    pause: "le téléchargement a été mis en pause",
+  };
+  const raison = raisons[code] ?? "un problème inattendu est survenu";
+  return (
+    `La reconnaissance des intervenants n'a pas pu se faire (${raison}). ` +
+    "Pas d'inquiétude : le texte est conservé, sans distinction de voix."
+  );
+}
+
 export function texteErreur(code) {
   return TEXTES_ERREUR[code] ?? TEXTES_ERREUR.inconnue;
 }
