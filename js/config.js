@@ -39,7 +39,9 @@ export const QUALITES = {
     modele: "onnx-community/whisper-small",
     encodeur: "q8",
     tailleMo: 250,
-    description: "Le plus juste, mais lent sur un téléphone (plusieurs minutes par minute d'audio).",
+    description:
+      "Le plus juste (nettement moins d'erreurs). Lent : mesuré sur un Redmi Note 15, " +
+      "environ 2 à 3 minutes de calcul pour 30 secondes d'audio. Idéal pour des audios courts.",
   },
 };
 
