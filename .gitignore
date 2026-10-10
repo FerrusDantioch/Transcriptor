@@ -29,6 +29,8 @@ npm-debug.log*
 models/
 *.onnx
 *.bin
+# … sauf les petits modèles de voix hébergés avec l'application
+!modeles/voix/**/*.onnx
 
 # Fichiers audio et vidéo de test (lourds et parfois privés)
 *.wav
