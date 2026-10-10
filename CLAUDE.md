@@ -86,6 +86,13 @@ icons/                     icônes 192 et 512 px (« any » et « maskable »)
   toujours passer `language`.
 - **Garde-fous Whisper** (worker) : `no_repeat_ngram_size` et `max_new_tokens`
   évitent les boucles « mot mot mot… » et les recalculs très longs. Ne pas les retirer.
+- **Compression (dtype)** : dans `js/transcription/worker.js`, l'encodeur est
+  donné sous deux noms (`model` et `encoder_model`) : la bibliothèque n'utilise
+  pas le même nom pour lister les fichiers et pour les charger (défaut de
+  Transformers.js 4.3.0). Ne pas retirer ce doublon.
+- **Qualité du texte** (retour de l'utilisateur) : « Équilibré » (base, encodeur
+  compressé q8) fait pas mal d'erreurs → ajout de « Équilibré + » (encodeur
+  non compressé fp32). Résultat à confirmer sur le téléphone.
 - **Messages d'erreur** : un code par type d'erreur (`js/transcription/erreurs.js`),
   texte rassurant correspondant dans `js/interface/messages.js`.
 

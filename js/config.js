@@ -3,25 +3,41 @@
 // Tout ce qui pourrait changer un jour est rassemblé ici.
 // ==========================================================
 
-// Les trois niveaux de qualité proposés dans les réglages.
-// « tailleMo » est une estimation du téléchargement avec le moteur
-// « processeur » (la taille exacte s'affiche pendant le téléchargement).
+// Les niveaux de qualité proposés dans les réglages.
+// - « tailleMo » : estimation du téléchargement avec le moteur « processeur »
+//   (la taille exacte s'affiche pendant le téléchargement) ;
+// - « encodeur » : compression de la première moitié du modèle (l'« encodeur »,
+//   qui « écoute » l'audio). « q8 » = compressé (léger), « fp32 » = non
+//   compressé (plus lourd, mais il entend mieux). La seconde moitié
+//   (le « décodeur », qui écrit le texte) reste compressée.
 export const QUALITES = {
   rapide: {
     nom: "Rapide",
     modele: "onnx-community/whisper-tiny",
+    encodeur: "q8",
     tailleMo: 45,
     description: "Le plus léger. Bon pour un premier essai, mais fait plus d'erreurs en français.",
   },
   equilibre: {
     nom: "Équilibré",
     modele: "onnx-community/whisper-base",
+    encodeur: "q8",
     tailleMo: 80,
-    description: "Le meilleur compromis entre vitesse et justesse sur un téléphone.",
+    description: "Bon compromis entre vitesse et justesse sur un téléphone.",
+  },
+  equilibrePlus: {
+    nom: "Équilibré +",
+    modele: "onnx-community/whisper-base",
+    encodeur: "fp32",
+    tailleMo: 140,
+    description:
+      "Le même modèle, moins compressé : devrait faire moins d'erreurs, un peu plus lent. " +
+      "Si « Équilibré » est déjà téléchargé, seuls ≈ 80 Mo de plus sont nécessaires.",
   },
   precis: {
     nom: "Précis",
     modele: "onnx-community/whisper-small",
+    encodeur: "q8",
     tailleMo: 250,
     description: "Le plus juste, mais lent sur un téléphone (plusieurs minutes par minute d'audio).",
   },
