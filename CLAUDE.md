@@ -110,7 +110,9 @@ icons/                     icônes 192 et 512 px (« any » et « maskable »)
   pause de 300 ms entre les morceaux. Le modèle n'est plus chargé à l'ouverture :
   état « disponible » (téléchargé) → chargé seulement au moment de transcrire
   (`attendreModelePret()` dans `js/app.js`), puis libéré après 5 min sans usage
-  (le worker est arrêté). Le nombre de cœurs ne peut être choisi
+  (le worker est arrêté).
+  ✅ Confirmé par l'utilisateur sur son Redmi : fluidité correcte avec ces réglages.
+  Ne pas revenir à « Automatique » / 4 cœurs par défaut. Le nombre de cœurs ne peut être choisi
   qu'au démarrage du worker : en changer = relancer un worker neuf.
 - **GitHub Pages** ne permet pas de régler les en-têtes HTTP COOP/COEP qui
   permettent le calcul multi-cœurs : c'est `sw.js` qui les ajoute (la page se
