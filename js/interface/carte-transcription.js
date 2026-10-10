@@ -103,6 +103,22 @@ export function creerCarteTranscription({
       traitementDetail.textContent = "";
     },
 
+    // Téléchargement des modèles de voix pendant un traitement
+    afficherTelechargementVoix(recu, total) {
+      traitementTexte.textContent = "Téléchargement des modèles des voix (une seule fois)…";
+      traitementBarre.value = total > 0 ? Math.min(100, Math.floor((recu / total) * 100)) : 0;
+      traitementDetail.textContent = "";
+    },
+
+    // Reconnaissance des intervenants : fenêtre « numero » sur « total »
+    majDiarisation(numero, total) {
+      traitementTexte.textContent = "Reconnaissance des intervenants…";
+      traitementBarre.value = total > 0 ? Math.round((numero / total) * 100) : 0;
+      if (!boutonArreterTranscription.disabled) {
+        traitementDetail.textContent = total > 0 ? `Analyse des voix : ${Math.round((numero / total) * 100)} %` : "";
+      }
+    },
+
     majAvancement(numero, total, resteEstime) {
       boutonArreterTranscription.hidden = false;
       if (numero === 0) boutonArreterTranscription.disabled = false;

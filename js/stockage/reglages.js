@@ -1,5 +1,5 @@
 // ==========================================================
-// Réglages de l'utilisateur (qualité, moteur, vitesse, langue).
+// Réglages de l'utilisateur (qualité, moteur, vitesse, langue, intervenants).
 // Ils sont gardés dans le « localStorage » du navigateur :
 // un petit espace de stockage simple, qui reste sur l'appareil.
 // ==========================================================
@@ -38,6 +38,9 @@ export function lireReglages() {
     qualite: enregistres.qualite in QUALITES ? enregistres.qualite : QUALITE_PAR_DEFAUT,
     moteur: enregistres.moteur in MOTEURS ? enregistres.moteur : MOTEUR_PAR_DEFAUT,
     vitesse: enregistres.vitesse in VITESSES ? enregistres.vitesse : VITESSE_PAR_DEFAUT,
+    // Reconnaissance des intervenants : désactivée par défaut, nombre de voix automatique
+    intervenants: enregistres.intervenants === true,
+    nombreVoix: ["auto", "2", "3", "4", "5", "6"].includes(enregistres.nombreVoix) ? enregistres.nombreVoix : "auto",
     langue: LANGUES.some((l) => l.code === enregistres.langue)
       ? enregistres.langue
       : LANGUE_PAR_DEFAUT,

@@ -71,6 +71,8 @@ js/audio/                  micro, décodage des fichiers, découpage en morceaux
 js/transcription/          Web Worker (Whisper), téléchargement avec reprise, assemblage du texte
 js/interface/              une « carte » de l'écran par fichier + textes des messages
 js/outils/                 mise en forme, écran allumé
+js/voix/                   reconnaissance des intervenants (analyse, regroupement, attribution)
+modeles/voix/              modèles de voix hébergés avec l'app (pyannote + WeSpeaker, ≈ 32 Mo, voir son README)
 vendor/transformers/       Transformers.js + ONNX Runtime copiés depuis npm (voir son README)
 icons/                     icônes 192 et 512 px (« any » et « maskable »)
 ```
@@ -112,6 +114,10 @@ icons/                     icônes 192 et 512 px (« any » et « maskable »)
 - Voix de test : `espeak-ng` (voix de synthèse, très mal reconnue par Whisper tiny :
   la qualité du texte doit être jugée sur une vraie voix, sur le téléphone).
 - Le site est servi dans un sous-dossier (`/Transcriptor/`) comme sur GitHub Pages.
+- Voix multiples : dialogues fabriqués avec plusieurs voix espeak-ng (fr+m3, fr+f3,
+  fr+m7, fr+f5), en notant qui parle quand, pour mesurer l'attribution.
+- Ne jamais lancer `pkill -f motif` dans une commande qui contient ce motif
+  (la commande se tue elle-même).
 
 ## Points de vigilance connus
 
@@ -133,5 +139,16 @@ icons/                     icônes 192 et 512 px (« any » et « maskable »)
   recharge une fois toute seule à la première visite).
 - **Micro** : le navigateur n'autorise le micro que sur une page sécurisée
   (`https://` ou `http://localhost`).
-- **Reconnaissance des voix (étape 2)** : faisable dans le navigateur mais
-  expérimental ; la qualité et la vitesse seront à vérifier sur le téléphone.
+- **Reconnaissance des intervenants (étape 2)** — option A choisie par l'utilisateur :
+  pyannote segmentation 3.0 (qui parle quand, fenêtres de 10 s) + empreintes
+  WeSpeaker ResNet34 + regroupement maison (`js/voix/regroupement.js`, seuil
+  pyannote 3.1, échantillon de 300 passages au-delà pour rester rapide : 3 h ≈ 0,3 s).
+  Modèles hébergés dans `modeles/voix/` (ONNX de sherpa-onnx, non modifiés) et
+  chargés via Transformers.js en changeant `env.remoteHost` le temps du chargement.
+  Ils ne se chargent qu'APRÈS Whisper (le moteur démarre ainsi avec 2 cœurs).
+  En cas d'échec : repli sur le texte sans distinction de voix (jamais de perte).
+  Tests (voix de synthèse espeak) : interview 2 voix 10/10 ; JDR 4 voix 11-13/14
+  (les voix de synthèse masculines se confondent). Analyse ≈ 10-15 % de la durée
+  de l'audio sur ordinateur (1 cœur). Usages : interviews et séances de JDR (≤ 3 h).
+- **Whisper sans aucun mot** sur un morceau : la bibliothèque plante
+  (« token_ids must be a non-empty array ») → intercepté dans le worker (morceau ignoré).

@@ -23,6 +23,13 @@
   --info-fond: #e8f0fa;
   --info-texte: #17406e;
   --enregistrement: #c62828;  /* point rouge pendant l'enregistrement */
+  /* Couleurs des intervenants (toujours accompagnées du nom écrit) */
+  --voix-0: #1f5fa8;
+  --voix-1: #b35c00;
+  --voix-2: #2e7d32;
+  --voix-3: #8e24aa;
+  --voix-4: #c62828;
+  --voix-5: #00796b;
 }
 
 /* ---------- Couleurs du thème sombre ----------
@@ -44,6 +51,12 @@
     --info-fond: #172a42;
     --info-texte: #b9d4f5;
     --enregistrement: #ff6b6b;
+    --voix-0: #8ab4f8;
+    --voix-1: #ffb86b;
+    --voix-2: #81c995;
+    --voix-3: #d7aefb;
+    --voix-4: #f28b82;
+    --voix-5: #78d9cc;
   }
 }
 
@@ -287,6 +300,101 @@ legend {
   font-size: 0.85rem;
   font-weight: 700;
   color: var(--accent);
+}
+
+/* ---------- Interrupteur « Reconnaître les intervenants » ---------- */
+.interrupteur {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.interrupteur label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  cursor: pointer;
+}
+
+/* La case à cocher prend l'apparence d'un interrupteur (rail + bouton rond) */
+.interrupteur input {
+  appearance: none;
+  flex-shrink: 0;
+  width: 3.2rem;
+  height: 1.9rem;
+  margin: 0;
+  border: 2px solid var(--bordure);
+  border-radius: 1rem;
+  background: var(--fond);
+  position: relative;
+  cursor: pointer;
+}
+
+.interrupteur input::before {
+  content: "";
+  position: absolute;
+  top: 0.2rem;
+  left: 0.2rem;
+  width: 1.3rem;
+  height: 1.3rem;
+  border-radius: 50%;
+  background: var(--texte-doux);
+}
+
+.interrupteur input:checked {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.interrupteur input:checked::before {
+  left: auto;
+  right: 0.2rem;
+  background: var(--accent-texte);
+}
+
+.interrupteur input:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.zone-intervenants {
+  margin: 0 0 1rem;
+  padding: 0.75rem;
+  border: 1px dashed var(--bordure);
+  border-radius: 0.75rem;
+}
+
+.zone-intervenants p {
+  margin: 0 0 0.6rem;
+}
+
+.zone-intervenants progress {
+  margin-bottom: 0.6rem;
+}
+
+/* ---------- Blocs par intervenant ---------- */
+.bloc-voix {
+  border-left: 0.35rem solid var(--couleur-voix, var(--accent));
+  padding: 0.1rem 0 0.1rem 0.75rem;
+  margin: 0.75rem 0;
+}
+
+.bloc-voix__nom {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 700;
+  margin: 0 0 0.25rem;
+}
+
+.pastille {
+  display: inline-block;
+  width: 0.85rem;
+  height: 0.85rem;
+  border-radius: 50%;
+  background: var(--couleur-voix, var(--accent));
+  flex-shrink: 0;
 }
 
 /* ---------- Historique ---------- */
