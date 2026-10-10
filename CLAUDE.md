@@ -97,6 +97,9 @@ icons/                     icônes 192 et 512 px (« any » et « maskable »)
 - **Qualité du texte** (retour de l'utilisateur) : « Équilibré » (base, encodeur
   compressé q8) fait pas mal d'erreurs → ajout de « Équilibré + » (encodeur
   non compressé fp32). Résultat à confirmer sur le téléphone.
+  ✅ Mesuré par l'utilisateur sur son Redmi : « Précis » (whisper-small q8) donne
+  une transcription nettement meilleure, sans ralentir le téléphone ; environ
+  2 à 3 min de calcul pour 30 s d'audio (soit 4 à 6 fois la durée de l'audio).
 - **Messages d'erreur** : un code par type d'erreur (`js/transcription/erreurs.js`),
   texte rassurant correspondant dans `js/interface/messages.js`.
 

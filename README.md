@@ -103,7 +103,7 @@ lent** (estimation, pas encore mesuré sur le Redmi) :
 | Rapide | environ 20 à 45 s | quelques secondes |
 | Équilibré | environ 45 s à 1 min 30 | 5 à 10 s |
 | Équilibré + | environ 1 à 2 min | 5 à 15 s |
-| Précis | environ 3 à 6 min | 20 à 40 s |
+| Précis | environ 4 à 6 min (**mesuré** : 2 à 3 min pour 30 s sur le Redmi Note 15) | 20 à 40 s |
 
 ## Organisation des fichiers
 
