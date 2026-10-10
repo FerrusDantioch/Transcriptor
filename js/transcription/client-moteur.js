@@ -8,7 +8,7 @@ export class MoteurTranscription {
   /**
    * @param {object} rappels fonctions appelées quand le worker donne des nouvelles
    * @param {(etat:object) => void} rappels.surEtat
-   * @param {(recu:number, total:number) => void} rappels.surProgression
+   * @param {(recu:number, total:number, cible:string) => void} rappels.surProgression
    * @param {(code:string, detail:string, operation:string) => void} rappels.surErreur
    * @param {(code:string) => void} rappels.surInfo
    */
@@ -52,7 +52,7 @@ export class MoteurTranscription {
         this.rappels.surEtat(message);
         break;
       case "progression":
-        this.rappels.surProgression(message.recu, message.total);
+        this.rappels.surProgression(message.recu, message.total, message.cible ?? "modele");
         break;
       case "info":
         this.rappels.surInfo(message.code);
@@ -103,19 +103,30 @@ export class MoteurTranscription {
   }
 
   /**
+   * Envoie une demande au worker et attend sa réponse.
+   * @param {string} type type de demande (« transcrire », « analyserVoix »…)
+   * @param {object} donnees données de la demande
+   * @param {Transferable[]} transferts données « transférées » sans copie
+   * @returns {Promise<object>} la réponse du worker
+   */
+  demander(type, donnees = {}, transferts = []) {
+    const id = this.prochainId++;
+    this.assurerWorker();
+    return new Promise((resoudre, rejeter) => {
+      this.demandesEnAttente.set(id, { resoudre, rejeter });
+      this.worker.postMessage({ type, id, ...donnees }, transferts);
+    });
+  }
+
+  /**
    * Transcrit un morceau d'audio.
    * @param {Float32Array} audio échantillons à 16 kHz (30 s maximum)
    * @param {string} langue code de langue, ex. « fr »
    * @returns {Promise<{segments: Array<{debut:number|null, fin:number|null, texte:string}>}>}
    */
   transcrire(audio, langue) {
-    const id = this.prochainId++;
-    this.assurerWorker();
-    return new Promise((resoudre, rejeter) => {
-      this.demandesEnAttente.set(id, { resoudre, rejeter });
-      // Le 2e argument « transfère » l'audio au worker au lieu de le copier
-      // (plus rapide et économise la mémoire)
-      this.worker.postMessage({ type: "transcrire", id, audio, langue }, [audio.buffer]);
-    });
+    // Le 3e argument « transfère » l'audio au worker au lieu de le copier
+    // (plus rapide et économise la mémoire)
+    return this.demander("transcrire", { audio, langue }, [audio.buffer]);
   }
 }

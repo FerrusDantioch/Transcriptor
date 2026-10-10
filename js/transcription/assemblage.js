@@ -60,6 +60,7 @@ export function placerSegments(segmentsBruts, morceau, segmentPrecedent) {
  * d'après la longueur du texte.
  * @returns {Array<{debut:number, fin:number, texte:string}>}
  */
+// Si les segments portent un « intervenant », chaque phrase garde le sien.
 export function regrouperEnPhrases(segments) {
   // 1) Découper les segments contenant plusieurs phrases
   const morceauxDePhrases = [];
@@ -69,18 +70,22 @@ export function regrouperEnPhrases(segments) {
     let instant = segment.debut;
     for (const partie of parties) {
       const duree = ((segment.fin - segment.debut) * partie.length) / longueurTotale;
-      morceauxDePhrases.push({ debut: instant, fin: instant + duree, texte: partie });
+      const bout = { debut: instant, fin: instant + duree, texte: partie };
+      if (segment.intervenant !== undefined) bout.intervenant = segment.intervenant;
+      morceauxDePhrases.push(bout);
       instant += duree;
     }
   }
 
   // 2) Recoller les bouts de phrase qui ne se terminent pas par une ponctuation
-  //    (sans dépasser 20 s, au cas où le modèle oublie la ponctuation)
+  //    (sans dépasser 20 s, au cas où le modèle oublie la ponctuation),
+  //    et seulement s'ils viennent du même intervenant
   const phrases = [];
   for (const bout of morceauxDePhrases) {
     const derniere = phrases.at(-1);
     const derniereIncomplete = derniere && !/[.!?…]["»”)]?$/.test(derniere.texte);
-    if (derniereIncomplete && bout.fin - derniere.debut <= 20) {
+    const memeVoix = derniere?.intervenant === bout.intervenant;
+    if (derniereIncomplete && memeVoix && bout.fin - derniere.debut <= 20) {
       derniere.texte += " " + bout.texte;
       derniere.fin = bout.fin;
     } else {
