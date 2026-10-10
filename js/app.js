@@ -29,12 +29,21 @@ import { creerReglages } from "./interface/reglages.js";
 // État de l'application
 // ---------------------------------------------------------------
 let reglages = lireReglages();
-let etatModele = "inconnu"; // absent | telechargement | pause | connexion-perdue | chargement | pret | erreur
+// absent | disponible (téléchargé mais pas en mémoire) | verification | telechargement
+// | pause | connexion-perdue | chargement | pret (en mémoire) | erreur
+let etatModele = "inconnu";
 let progression = { recu: 0, total: 0 };
 let occupe = false;          // vrai pendant un enregistrement ou une transcription
 let demandeArret = false;    // l'utilisateur a demandé d'arrêter la transcription
 let minuteurChrono = null;
 const enregistreur = new Enregistreur();
+
+// Le modèle chargé en mémoire est libéré après 5 minutes sans servir
+const DELAI_LIBERATION = 5 * 60 * 1000; // millisecondes
+let minuteurLiberation = null;
+
+// Transcriptions qui attendent que le modèle soit prêt
+let attentesModele = [];
 
 // ---------------------------------------------------------------
 // Mode hors ligne et installation
@@ -49,7 +58,9 @@ const moteur = new MoteurTranscription({
   surEtat(message) {
     if (message.type === "verification") {
       if (message.present) {
-        preparerModele(); // déjà téléchargé : on le charge en mémoire
+        // Déjà téléchargé : on ne le charge en mémoire qu'au moment de transcrire
+        changerEtat("disponible");
+        carteModele.afficherDisponible({ qualite: reglages.qualite });
       } else {
         changerEtat("absent");
         carteModele.afficherAbsent({
@@ -69,6 +80,7 @@ const moteur = new MoteurTranscription({
     } else if (message.etat === "pret") {
       changerEtat("pret");
       carteModele.afficherPret({ qualite: reglages.qualite, device: message.device, coeurs: message.coeurs });
+      programmerLiberation();
     }
   },
 
@@ -79,6 +91,8 @@ const moteur = new MoteurTranscription({
   },
 
   surErreur(code) {
+    // Les transcriptions qui attendaient le modèle reçoivent l'erreur
+    finirAttentes(code);
     if (code === "pause") {
       changerEtat("pause");
       carteModele.afficherPause(progression.recu, progression.total);
@@ -116,10 +130,42 @@ function preparerModele() {
   moteur.preparer(modeleChoisi(), reglages.moteur, nombreDeCoeurs(reglages.vitesse));
 }
 
+// Charge le modèle en mémoire (si besoin) et attend qu'il soit prêt.
+// Renvoie une promesse : réussie quand le modèle est prêt, en échec s'il y a une erreur.
+function attendreModelePret() {
+  if (etatModele === "pret") return Promise.resolve();
+  if (!["verification", "telechargement", "chargement"].includes(etatModele)) preparerModele();
+  return new Promise((resoudre, rejeter) => attentesModele.push({ resoudre, rejeter }));
+}
+
+// Prévient toutes les transcriptions en attente (code = undefined si tout va bien)
+function finirAttentes(code) {
+  const attentes = attentesModele;
+  attentesModele = [];
+  for (const { resoudre, rejeter } of attentes) {
+    if (code) rejeter(Object.assign(new Error("Modèle indisponible"), { code }));
+    else resoudre();
+  }
+}
+
+// Après 5 minutes sans transcription, on libère la mémoire du téléphone
+function programmerLiberation() {
+  clearTimeout(minuteurLiberation);
+  minuteurLiberation = setTimeout(() => {
+    if (occupe || etatModele !== "pret") return;
+    moteur.arreter(); // arrête le worker : toute sa mémoire est rendue au téléphone
+    changerEtat("disponible");
+    carteModele.afficherDisponible({ qualite: reglages.qualite, libere: true });
+  }, DELAI_LIBERATION);
+}
+
 // Met à jour l'état et active / désactive ce qui doit l'être
 function changerEtat(nouvelEtat) {
   etatModele = nouvelEtat;
-  carteTranscription.activer(etatModele === "pret" && !occupe);
+  if (etatModele === "pret") finirAttentes();
+  // On peut lancer une transcription dès que le modèle est sur l'appareil,
+  // même s'il n'est pas encore en mémoire (il se chargera à ce moment-là)
+  carteTranscription.activer(["pret", "disponible"].includes(etatModele) && !occupe);
   // On ne change pas de modèle en plein téléchargement ou chargement
   const reglagesModifiables = !occupe && !["verification", "telechargement", "chargement"].includes(etatModele);
   interfaceReglages.activer(reglagesModifiables);
@@ -210,6 +256,9 @@ async function demarrerEnregistrement() {
   commencerTravail();
   carteTranscription.afficherEnregistrement();
   minuteurChrono = setInterval(() => carteTranscription.majChrono(enregistreur.duree), 500);
+  // Pendant que vous parlez, le modèle se charge en mémoire en arrière-plan
+  // (une éventuelle erreur s'affichera dans la carte du modèle)
+  attendreModelePret().catch(() => {});
 }
 
 async function arreterEnregistrement() {
@@ -241,7 +290,12 @@ async function traiterAudio(fichierAudio, { titre, source }) {
   let transcription = null;
 
   try {
+    // Lecture du fichier et chargement du modèle en même temps
+    const chargement = attendreModelePret();
+    chargement.catch(() => {}); // l'erreur éventuelle est traitée plus bas
     const audio = await decoderAudio(fichierAudio);
+    if (etatModele !== "pret") carteTranscription.afficherPreparation();
+    await chargement;
     if (audio.duration < 0.3) {
       carteTranscription.afficherErreur("fichier-vide");
       return;
@@ -314,6 +368,7 @@ async function sauvegarder(transcription) {
 
 function commencerTravail() {
   occupe = true;
+  clearTimeout(minuteurLiberation);
   garderEcranAllume();
   changerEtat(etatModele);
 }
@@ -322,6 +377,7 @@ function finirTravail() {
   occupe = false;
   laisserEcranSEteindre();
   changerEtat(etatModele);
+  if (etatModele === "pret") programmerLiberation();
 }
 
 // Évite de perdre un enregistrement en fermant la page par erreur

@@ -80,6 +80,9 @@ plus tard.
 - **Vitesse de calcul** : « Douce » par défaut (2 cœurs, le téléphone reste
   utilisable) ou « Maximale » (jusqu'à 4 cœurs, plus rapide mais le téléphone
   peut ralentir fortement).
+- **Mémoire économisée** : le modèle ne se charge en mémoire qu'au moment de
+  transcrire (pendant l'enregistrement au micro, il se charge en arrière-plan),
+  et il est libéré après 5 minutes sans servir.
 - **Micro** (démarrer / arrêter, durée affichée) ou **fichier audio**
   (MP3, WAV, M4A, OGG).
 - Audios longs **découpés en morceaux d'environ 28 s**, coupés dans les
