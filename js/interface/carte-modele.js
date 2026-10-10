@@ -109,6 +109,17 @@ export function creerCarteModele({ surTelecharger, surPause }) {
       detail.textContent = "";
     },
 
+    // Modèle téléchargé, mais pas encore chargé en mémoire
+    afficherDisponible({ qualite, libere = false }) {
+      reinitialiser();
+      texte.textContent =
+        `✓ Modèle « ${QUALITES[qualite].nom} » téléchargé. Fonctionne hors ligne. ` +
+        "Il se charge en mémoire au moment de transcrire.";
+      if (libere) {
+        afficherMessage(message, "Mémoire libérée : le modèle n'a pas servi depuis 5 minutes.", "info");
+      }
+    },
+
     afficherPret({ qualite, device, coeurs }) {
       reinitialiser();
       const moteur = device === "webgpu"

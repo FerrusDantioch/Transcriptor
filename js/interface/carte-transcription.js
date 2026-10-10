@@ -96,6 +96,13 @@ export function creerCarteTranscription({
       boutonArreterTranscription.hidden = true;
     },
 
+    // Le modèle se charge encore en mémoire
+    afficherPreparation() {
+      traitementTexte.textContent = "Préparation du modèle… (quelques secondes, parfois plus)";
+      traitementBarre.removeAttribute("value");
+      traitementDetail.textContent = "";
+    },
+
     majAvancement(numero, total, resteEstime) {
       boutonArreterTranscription.hidden = false;
       if (numero === 0) boutonArreterTranscription.disabled = false;
