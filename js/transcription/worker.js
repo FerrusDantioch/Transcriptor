@@ -30,10 +30,15 @@ const CACHE_MOTEUR = "transcriptor-moteur-1.31.0-dev.20260914";
 // Niveau de compression des fichiers du modèle selon le moteur.
 // « q8 » = poids compressés sur 8 bits (léger, idéal pour le processeur).
 // Pour la carte graphique, on suit les réglages recommandés par Transformers.js.
-const COMPRESSION = {
-  wasm: { encoder_model: "q8", decoder_model_merged: "q8" },
-  webgpu: { encoder_model: "fp32", decoder_model_merged: "q4" },
-};
+// L'encodeur (« q8 » ou « fp32 ») dépend de la qualité choisie.
+// L'encodeur est donné sous deux noms : « encoder_model » (utilisé pour charger
+// le modèle) et « model » (utilisé par la bibliothèque pour lister les fichiers
+// à télécharger). Sans ce doublon, la liste ne correspondrait pas.
+function compression(device, encodeur = "q8") {
+  const enc = device === "webgpu" ? "fp32" : encodeur;
+  const dec = device === "webgpu" ? "q4" : "q8";
+  return { model: enc, encoder_model: enc, decoder_model_merged: dec };
+}
 
 // --- Réglages de Transformers.js ---
 env.allowLocalModels = false; // les modèles viennent de Hugging Face (puis du cache)
@@ -74,9 +79,9 @@ function envoyer(message) {
 // ---------------------------------------------------------------
 // 1) Vérifier si le modèle est déjà sur l'appareil
 // ---------------------------------------------------------------
-async function verifier({ modele, moteur }) {
+async function verifier({ modele, moteur, encodeur }) {
   const device = await choisirDevice(moteur);
-  const present = (await moteurEnCache()) && (await modeleEnCache(modele, device));
+  const present = (await moteurEnCache()) && (await modeleEnCache(modele, device, encodeur));
   envoyer({
     type: "verification",
     present,
@@ -88,21 +93,21 @@ async function verifier({ modele, moteur }) {
 // ---------------------------------------------------------------
 // 2) Préparer : télécharger si besoin, puis charger en mémoire
 // ---------------------------------------------------------------
-async function preparer({ modele, moteur, coeurs }) {
+async function preparer({ modele, moteur, coeurs, encodeur }) {
   controleur = new AbortController();
   // Nombre de cœurs du processeur : n'a d'effet qu'avant le tout premier
   // chargement (pour en changer, la page relance un worker neuf)
   if (!transcripteur) env.backends.onnx.wasm.numThreads = coeurs || 2;
   const device = await choisirDevice(moteur);
   try {
-    await charger(modele, device);
+    await charger(modele, device, encodeur);
   } catch (erreur) {
     const code = codeErreur(erreur);
     // Si la carte graphique pose problème, on se rabat sur le processeur
     if (device === "webgpu" && moteur === "auto" && !["pause", "connexion", "hors-ligne", "espace"].includes(code)) {
       console.warn("WebGPU indisponible, passage au processeur :", erreur);
       envoyer({ type: "info", code: "repli-processeur" });
-      await charger(modele, "wasm");
+      await charger(modele, "wasm", encodeur);
     } else {
       throw erreur;
     }
@@ -111,11 +116,12 @@ async function preparer({ modele, moteur, coeurs }) {
   }
 }
 
-async function charger(modele, device) {
-  const options = { dtype: COMPRESSION[device], device };
+async function charger(modele, device, encodeur) {
+  const options = { dtype: compression(device, encodeur), device };
+  const config = `${modele}|${device}|${encodeur}`;
 
   // Déjà chargé avec les mêmes réglages : rien à faire
-  if (transcripteur && configChargee?.modele === modele && configChargee?.device === device) {
+  if (transcripteur && configChargee === config) {
     envoyer({ type: "etat", etat: "pret", device, coeurs: coeursUtilises() });
     return;
   }
@@ -132,7 +138,7 @@ async function charger(modele, device) {
   } else {
     aTelecharger.push({ url: URL_MOTEUR_WASM, cache: CACHE_MOTEUR, taille: await tailleFichier(URL_MOTEUR_WASM) });
   }
-  if (!(await modeleEnCache(modele, device))) {
+  if (!(await modeleEnCache(modele, device, encodeur))) {
     if (!navigator.onLine) throw new ErreurHorsLigne();
     const fichiers = await ModelRegistry.get_pipeline_files(TACHE, modele, options);
     const cacheModeles = await caches.open(env.cacheKey);
@@ -171,7 +177,7 @@ async function charger(modele, device) {
   }
 
   transcripteur = nouveau;
-  configChargee = { modele, device };
+  configChargee = config;
   envoyer({ type: "etat", etat: "pret", device, coeurs: coeursUtilises() });
 }
 
@@ -267,9 +273,9 @@ function urlDistante(modele, fichier) {
   return new URL(chemin + fichier, env.remoteHost).href;
 }
 
-async function modeleEnCache(modele, device) {
+async function modeleEnCache(modele, device, encodeur) {
   try {
-    return await ModelRegistry.is_pipeline_cached(TACHE, modele, { dtype: COMPRESSION[device], device });
+    return await ModelRegistry.is_pipeline_cached(TACHE, modele, { dtype: compression(device, encodeur), device });
   } catch {
     return false;
   }

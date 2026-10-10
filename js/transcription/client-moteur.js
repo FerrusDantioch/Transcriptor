@@ -78,16 +78,23 @@ export class MoteurTranscription {
   }
 
   // Le modèle est-il déjà téléchargé ? (réponse via surEtat, type « verification »)
-  verifier(modele, moteur) {
+  // « qualite » : un élément de QUALITES (js/config.js)
+  verifier(qualite, moteur) {
     this.assurerWorker();
-    this.worker.postMessage({ type: "verifier", modele, moteur });
+    this.worker.postMessage({ type: "verifier", modele: qualite.modele, encodeur: qualite.encodeur, moteur });
   }
 
   // Télécharge (si besoin) puis charge le modèle en mémoire
   // « coeurs » : nombre de cœurs du processeur à utiliser
-  preparer(modele, moteur, coeurs) {
+  preparer(qualite, moteur, coeurs) {
     this.assurerWorker();
-    this.worker.postMessage({ type: "preparer", modele, moteur, coeurs });
+    this.worker.postMessage({
+      type: "preparer",
+      modele: qualite.modele,
+      encodeur: qualite.encodeur,
+      moteur,
+      coeurs,
+    });
   }
 
   // Met le téléchargement en pause

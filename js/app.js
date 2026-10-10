@@ -114,20 +114,20 @@ const moteur = new MoteurTranscription({
   },
 });
 
-function modeleChoisi() {
-  return QUALITES[reglages.qualite].modele;
+function qualiteChoisie() {
+  return QUALITES[reglages.qualite];
 }
 
 function verifierModele() {
   changerEtat("verification");
   carteModele.afficherVerification();
-  moteur.verifier(modeleChoisi(), reglages.moteur);
+  moteur.verifier(qualiteChoisie(), reglages.moteur);
 }
 
 function preparerModele() {
   // Demande au navigateur de ne pas effacer le modèle pour libérer de la place
   navigator.storage?.persist?.().catch(() => {});
-  moteur.preparer(modeleChoisi(), reglages.moteur, nombreDeCoeurs(reglages.vitesse));
+  moteur.preparer(qualiteChoisie(), reglages.moteur, nombreDeCoeurs(reglages.vitesse));
 }
 
 // Charge le modèle en mémoire (si besoin) et attend qu'il soit prêt.

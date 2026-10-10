@@ -72,7 +72,8 @@ plus tard.
 - **Modèle Whisper téléchargé une seule fois**, avec barre de progression,
   pause, et **reprise après une coupure de connexion** (le téléchargement se
   fait par morceaux de 4 Mo gardés sur l'appareil).
-- **Trois qualités** (Réglages) : Rapide (≈ 45 Mo), Équilibré (≈ 80 Mo),
+- **Quatre qualités** (Réglages) : Rapide (≈ 45 Mo), Équilibré (≈ 80 Mo),
+  Équilibré + (≈ 140 Mo : même modèle, moins compressé, plus juste),
   Précis (≈ 250 Mo), plus ≈ 27 Mo de moteur de calcul la première fois.
 - **Moteur de calcul** : processeur par défaut (le plus fiable). La carte
   graphique (WebGPU) reste disponible dans les réglages, mais elle peut figer
@@ -101,6 +102,7 @@ lent** (estimation, pas encore mesuré sur le Redmi) :
 |---|---|---|
 | Rapide | environ 20 à 45 s | quelques secondes |
 | Équilibré | environ 45 s à 1 min 30 | 5 à 10 s |
+| Équilibré + | environ 1 à 2 min | 5 à 15 s |
 | Précis | environ 3 à 6 min | 20 à 40 s |
 
 ## Organisation des fichiers
