@@ -1,0 +1,5 @@
+Modèle WeSpeaker « voxceleb_resnet34_LM »
+Auteurs : l'équipe WeSpeaker (https://github.com/wenet-e2e/wespeaker)
+Licence : Creative Commons Attribution 4.0 International (CC BY 4.0)
+https://creativecommons.org/licenses/by/4.0/
+Conversion ONNX : k2-fsa/sherpa-onnx (fichier wespeaker_en_voxceleb_resnet34_LM.onnx), utilisée sans modification.
