@@ -48,6 +48,10 @@ Feuille de route :
 2. Avancer par **petites étapes testables**. Après chaque étape, expliquer
    **exactement comment tester** (quoi ouvrir, sur quoi cliquer, ce qu'on doit voir).
 3. Faire des **commits Git fréquents**, avec des messages en français.
+   **Branches** : `main` = version publiée sur GitHub Pages. Le travail se fait
+   sur la branche de travail de la session ; à la fin de chaque étape testée,
+   mettre aussi `main` à jour (`git push origin <branche>:main`), sans demander
+   (choix « Option A » de l'utilisateur), puis lui dire comment tester.
 4. Si un choix technique est **risqué ou limité** (ex. performances sur téléphone),
    le dire honnêtement et proposer une alternative.
 
