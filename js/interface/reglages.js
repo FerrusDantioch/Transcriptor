@@ -2,7 +2,7 @@
 // Section « Réglages » : qualité, moteur de calcul, stockage.
 // ==========================================================
 
-import { QUALITES, MOTEURS } from "../config.js";
+import { QUALITES, MOTEURS, VITESSES } from "../config.js";
 import { formaterTaille } from "../outils/format.js";
 import { afficherMessage, cacherMessage } from "./messages.js";
 
@@ -29,6 +29,14 @@ export function creerReglages({ reglages, surChangement, surSupprimerModeles }) 
     Object.entries(MOTEURS).map(([cle, m]) => ({ valeur: cle, titre: m.nom, description: m.description })),
     reglages.moteur,
     (valeur) => surChangement({ moteur: valeur })
+  );
+
+  remplirChoix(
+    $("choix-vitesse"),
+    "vitesse",
+    Object.entries(VITESSES).map(([cle, v]) => ({ valeur: cle, titre: v.nom, description: v.description })),
+    reglages.vitesse,
+    (valeur) => surChangement({ vitesse: valeur })
   );
 
   $("bouton-supprimer-modeles").addEventListener("click", async () => {

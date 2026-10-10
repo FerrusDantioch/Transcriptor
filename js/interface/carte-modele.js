@@ -109,11 +109,11 @@ export function creerCarteModele({ surTelecharger, surPause }) {
       detail.textContent = "";
     },
 
-    afficherPret({ qualite, device, multiCoeurs }) {
+    afficherPret({ qualite, device, coeurs }) {
       reinitialiser();
       const moteur = device === "webgpu"
         ? "carte graphique"
-        : `processeur${multiCoeurs ? ", plusieurs cœurs" : ", un seul cœur"}`;
+        : `processeur, ${coeurs > 1 ? `${coeurs} cœurs` : "1 cœur"}`;
       texte.textContent = `✓ Modèle « ${QUALITES[qualite].nom} » prêt (${moteur}). Fonctionne hors ligne.`;
     },
 

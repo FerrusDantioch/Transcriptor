@@ -74,8 +74,12 @@ plus tard.
   fait par morceaux de 4 Mo gardés sur l'appareil).
 - **Trois qualités** (Réglages) : Rapide (≈ 45 Mo), Équilibré (≈ 80 Mo),
   Précis (≈ 250 Mo), plus ≈ 27 Mo de moteur de calcul la première fois.
-- **Moteur de calcul** : automatique (carte graphique WebGPU si possible,
-  sinon processeur), ou au choix.
+- **Moteur de calcul** : processeur par défaut (le plus fiable). La carte
+  graphique (WebGPU) reste disponible dans les réglages, mais elle peut figer
+  l'écran du téléphone.
+- **Vitesse de calcul** : « Douce » par défaut (2 cœurs, le téléphone reste
+  utilisable) ou « Maximale » (jusqu'à 4 cœurs, plus rapide mais le téléphone
+  peut ralentir fortement).
 - **Micro** (démarrer / arrêter, durée affichée) ou **fichier audio**
   (MP3, WAV, M4A, OGG).
 - Audios longs **découpés en morceaux d'environ 28 s**, coupés dans les
@@ -86,8 +90,8 @@ plus tard.
 
 ### Temps de traitement attendus (estimations)
 
-Mesuré sur un ordinateur à 4 cœurs : 40 s d'audio en environ 5 à 9 s avec la
-qualité Rapide. Sur un téléphone de milieu de gamme, compter **2 à 4 fois plus
+Mesuré sur un ordinateur à 4 cœurs, qualité Rapide : 40 s d'audio en environ
+5 s en vitesse « Douce » (4 s en « Maximale »). Sur un téléphone de milieu de gamme, compter **2 à 4 fois plus
 lent** (estimation, pas encore mesuré sur le Redmi) :
 
 | Qualité | 1 minute d'audio | Mise en mémoire au démarrage |

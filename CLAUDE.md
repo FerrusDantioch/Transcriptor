@@ -104,6 +104,11 @@ icons/                     icônes 192 et 512 px (« any » et « maskable »)
 - **Performances sur téléphone** : utiliser de petits modèles Whisper
   (`tiny` ou `base`, version « quantifiée » = compressée). Les gros modèles
   sont trop lents ou trop lourds en mémoire sur mobile.
+- **Téléphone figé** (retour de l'utilisateur, Redmi, qualité Équilibré, moteur
+  « Automatique ») : la carte graphique et 4 cœurs à fond figeaient l'écran.
+  Depuis : moteur « Processeur » et vitesse « Douce » (2 cœurs) par défaut,
+  pause de 300 ms entre les morceaux. Le nombre de cœurs ne peut être choisi
+  qu'au démarrage du worker : en changer = relancer un worker neuf.
 - **GitHub Pages** ne permet pas de régler les en-têtes HTTP COOP/COEP qui
   permettent le calcul multi-cœurs : c'est `sw.js` qui les ajoute (la page se
   recharge une fois toute seule à la première visite).
