@@ -63,19 +63,7 @@ export function placerSegments(segmentsBruts, morceau, segmentPrecedent) {
 // Si les segments portent un « intervenant », chaque phrase garde le sien.
 export function regrouperEnPhrases(segments) {
   // 1) Découper les segments contenant plusieurs phrases
-  const morceauxDePhrases = [];
-  for (const segment of segments) {
-    const parties = segment.texte.split(/(?<=[.!?…])\s+/).filter(Boolean);
-    const longueurTotale = parties.reduce((s, p) => s + p.length, 0) || 1;
-    let instant = segment.debut;
-    for (const partie of parties) {
-      const duree = ((segment.fin - segment.debut) * partie.length) / longueurTotale;
-      const bout = { debut: instant, fin: instant + duree, texte: partie };
-      if (segment.intervenant !== undefined) bout.intervenant = segment.intervenant;
-      morceauxDePhrases.push(bout);
-      instant += duree;
-    }
-  }
+  const morceauxDePhrases = decouperEnPhrases(segments);
 
   // 2) Recoller les bouts de phrase qui ne se terminent pas par une ponctuation
   //    (sans dépasser 20 s, au cas où le modèle oublie la ponctuation),
@@ -93,6 +81,30 @@ export function regrouperEnPhrases(segments) {
     }
   }
   return phrases;
+}
+
+/**
+ * Découpe chaque segment en phrases (qui finissent par . ! ? …).
+ * L'heure de chaque phrase est estimée d'après la longueur de son texte.
+ * Sert aussi à la reconnaissance des intervenants : Whisper met parfois
+ * deux personnes dans un même segment ; phrase par phrase, chacune
+ * peut retrouver la bonne voix.
+ */
+export function decouperEnPhrases(segments) {
+  const resultat = [];
+  for (const segment of segments) {
+    const parties = segment.texte.split(/(?<=[.!?…])\s+/).filter(Boolean);
+    const longueurTotale = parties.reduce((s, p) => s + p.length, 0) || 1;
+    let instant = segment.debut;
+    for (const partie of parties) {
+      const duree = ((segment.fin - segment.debut) * partie.length) / longueurTotale;
+      const bout = { debut: instant, fin: instant + duree, texte: partie };
+      if (segment.intervenant !== undefined) bout.intervenant = segment.intervenant;
+      resultat.push(bout);
+      instant += duree;
+    }
+  }
+  return resultat;
 }
 
 // Retire du début de « texte » les mots qui terminent déjà « precedent »

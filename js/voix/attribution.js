@@ -3,7 +3,12 @@
 // On compare les heures du texte (données par Whisper) avec la
 // chronologie des voix : le texte va à la voix qui parle le plus
 // longtemps pendant ce passage.
+// Les segments de Whisper sont d'abord découpés en phrases : quand
+// Whisper met deux personnes dans un même segment, chaque phrase
+// retrouve ainsi sa propre voix.
 // ==========================================================
+
+import { decouperEnPhrases } from "../transcription/assemblage.js";
 
 /**
  * @param {Array<{debut:number, fin:number, texte:string}>} segments texte horodaté
@@ -15,7 +20,7 @@ export function attribuerIntervenants(segments, tours) {
   const valides = tours.filter((t) => t.intervenant >= 0);
   if (valides.length === 0) return { segments, nombre: 0 };
 
-  const attribues = segments.map((s) => ({ ...s, intervenant: voixPrincipale(s, valides) }));
+  const attribues = decouperEnPhrases(segments).map((s) => ({ ...s, intervenant: voixPrincipale(s, valides) }));
 
   // Renumérote dans l'ordre d'apparition dans le texte (1er qui parle = Intervenant 1)
   const correspondance = new Map();

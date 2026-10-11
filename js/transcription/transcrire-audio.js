@@ -18,17 +18,22 @@ const PAUSE_ENTRE_MORCEAUX = 300; // millisecondes
  * @param {(segments:Array, numero:number, total:number, resteEstime:number|null) => void} options.surAvancement
  *        appelée après chaque morceau (resteEstime en secondes)
  * @param {() => boolean} options.doitArreter renvoie vrai si l'utilisateur a demandé l'arrêt
+ * @param {{morceau:number, segments:Array}} [options.reprise] reprendre un travail commencé
+ *        (à partir du morceau « morceau », avec les segments déjà obtenus)
+ * @param {(segments:Array, morceauSuivant:number) => Promise<void>} [options.surMorceauFini]
+ *        appelée après chaque morceau (pour sauvegarder l'avancement)
  * @returns {Promise<{segments:Array, interrompue:boolean}>}
  */
-export async function transcrireAudio(audio, { moteur, langue, surAvancement, doitArreter }) {
+export async function transcrireAudio(audio, { moteur, langue, surAvancement, doitArreter, reprise, surMorceauFini }) {
   const morceaux = decouperEnMorceaux(audio);
-  const segments = [];
+  const segments = [...(reprise?.segments ?? [])];
+  const depart = Math.min(reprise?.morceau ?? 0, morceaux.length);
   let tempsCalcul = 0;   // temps passé à calculer (ms)
   let audioTraite = 0;   // durée d'audio déjà calculée (s)
 
-  surAvancement(segments, 0, morceaux.length, null);
+  surAvancement(segments, depart, morceaux.length, null);
 
-  for (let i = 0; i < morceaux.length; i++) {
+  for (let i = depart; i < morceaux.length; i++) {
     if (doitArreter()) return { segments, interrompue: true };
 
     const morceau = morceaux[i];
@@ -46,6 +51,7 @@ export async function transcrireAudio(audio, { moteur, langue, surAvancement, do
     const audioRestant = audio.duration - morceau.fin;
     const resteEstime = audioTraite > 0 ? (tempsCalcul / 1000 / audioTraite) * audioRestant : null;
     surAvancement(segments, i + 1, morceaux.length, resteEstime);
+    await surMorceauFini?.(segments, i + 1);
     if (i < morceaux.length - 1) await new Promise((r) => setTimeout(r, PAUSE_ENTRE_MORCEAUX));
   }
 
