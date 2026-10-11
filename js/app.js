@@ -9,7 +9,7 @@ import { enregistrerServiceWorker } from "./pwa/register-service-worker.js";
 import { preparerBoutonInstallation } from "./pwa/install-button.js";
 import { QUALITES, nombreDeCoeurs } from "./config.js";
 import { lireReglages, enregistrerReglages } from "./stockage/reglages.js";
-import { ajouterTranscription } from "./stockage/historique.js";
+import { ajouterTranscription, mettreAJourTranscription } from "./stockage/historique.js";
 import { MoteurTranscription } from "./transcription/client-moteur.js";
 import { transcrireAudio } from "./transcription/transcrire-audio.js";
 import { regrouperEnPhrases } from "./transcription/assemblage.js";
@@ -241,7 +241,12 @@ function telechargerModelesVoix() {
     .catch((erreur) => zoneIntervenants.afficherErreur(erreur.code ?? codeErreur(erreur)));
 }
 
-const carteResultat = creerCarteResultat();
+const carteResultat = creerCarteResultat({
+  // Renommage ou correction : on met à jour l'historique (si le texte y est)
+  surModification: async (transcription) => {
+    if (transcription.id !== undefined) await mettreAJourTranscription(transcription);
+  },
+});
 
 const carteHistorique = creerCarteHistorique({
   surOuvrir: (transcription) => {

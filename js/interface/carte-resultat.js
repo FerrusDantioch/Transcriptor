@@ -1,19 +1,35 @@
 // ==========================================================
 // Carte « Résultat » : texte horodaté, boutons Copier,
 // Télécharger (.txt) et Effacer. Si les intervenants ont été reconnus,
-// le texte est présenté par blocs : un bloc par prise de parole.
+// le texte est présenté par blocs : un bloc par prise de parole, et
+// on peut renommer les intervenants ou corriger qui parle.
 // ==========================================================
 
 import { LANGUES, QUALITES } from "../config.js";
 import { formaterHorodatage, formaterDuree, formaterDate, nomDeFichier } from "../outils/format.js";
 import { afficherMessage, cacherMessage } from "./messages.js";
+import {
+  nomIntervenant,
+  couleurIntervenant,
+  creerPastille,
+  creerLegende,
+  creerLigneCorrigible,
+  demanderNom,
+  changerIntervenant,
+} from "./edition-intervenants.js";
 
 const $ = (id) => document.getElementById(id);
 
-export function creerCarteResultat() {
+/**
+ * @param {object} options
+ * @param {(transcription:object) => Promise<void>} options.surModification
+ *        appelée après un renommage ou une correction (pour l'enregistrer)
+ */
+export function creerCarteResultat({ surModification }) {
   const carte = $("carte-resultat");
   const titre = $("resultat-titre");
   const infos = $("resultat-infos");
+  const zoneIntervenants = $("resultat-intervenants");
   const zoneTexte = $("resultat-texte");
   const boutonCopier = $("bouton-copier");
   const boutonTelecharger = $("bouton-telecharger-txt");
@@ -21,6 +37,7 @@ export function creerCarteResultat() {
   const message = $("resultat-message");
 
   let transcriptionAffichee = null;
+  let enCorrection = false; // mode « Corriger qui parle »
 
   boutonCopier.addEventListener("click", async () => {
     try {
@@ -57,40 +74,95 @@ export function creerCarteResultat() {
 
   function effacer() {
     transcriptionAffichee = null;
+    enCorrection = false;
     zoneTexte.replaceChildren();
+    zoneIntervenants.replaceChildren();
     carte.hidden = true;
   }
 
+  /**
+   * Affiche une transcription (en cours ou terminée)
+   * @param {object} transcription voir js/stockage/historique.js
+   * @param {{enCours?: boolean}} options
+   */
+  function afficher(transcription, { enCours = false } = {}) {
+    if (transcription !== transcriptionAffichee) enCorrection = false;
+    transcriptionAffichee = transcription;
+    carte.hidden = false;
+    titre.textContent = transcription.titre;
+    infos.textContent = decrire(transcription) + (enCours ? " · transcription en cours…" : "");
+
+    // Liste des intervenants (renommer, corriger) : seulement une fois le texte terminé
+    const modifiable = avecIntervenants(transcription) && !enCours;
+    zoneIntervenants.hidden = !modifiable;
+    zoneIntervenants.replaceChildren(
+      ...(modifiable ? [creerLegende(transcription, { enCorrection, surRenommer: renommer, surBasculerCorrection: basculerCorrection })] : [])
+    );
+
+    // Une ligne par phrase : [00:12] Texte de la phrase
+    let lignes;
+    if (modifiable && enCorrection) {
+      lignes = transcription.phrases.map((p) => creerLigneCorrigible(transcription, p, (choix) => corriger(p, choix)));
+    } else if (avecIntervenants(transcription)) {
+      lignes = creerBlocs(transcription);
+    } else {
+      lignes = transcription.phrases.map(creerLigne);
+    }
+    if (lignes.length === 0) {
+      const vide = document.createElement("p");
+      vide.className = "note";
+      vide.textContent = enCours ? "Le texte apparaîtra ici au fur et à mesure…" : "Aucune parole détectée.";
+      lignes.push(vide);
+    }
+    zoneTexte.replaceChildren(...lignes);
+
+    const desactive = enCours || transcription.phrases.length === 0;
+    boutonCopier.disabled = desactive;
+    boutonTelecharger.disabled = desactive;
+    boutonEffacer.disabled = enCours;
+    cacherMessage(message);
+  }
+
+  // Renomme un intervenant : le nom change partout (il n'est rangé qu'à un endroit)
+  async function renommer(numero) {
+    const t = transcriptionAffichee;
+    const nouveau = demanderNom(nomIntervenant(t, numero));
+    if (!nouveau) return;
+    t.intervenants[numero] = { ...t.intervenants[numero], nom: nouveau };
+    afficher(t);
+    await enregistrer("✓ Nom changé partout dans ce texte.");
+  }
+
+  function basculerCorrection() {
+    enCorrection = !enCorrection;
+    afficher(transcriptionAffichee);
+    if (!enCorrection) afficherMessage(message, "✓ Corrections terminées.", "succes");
+  }
+
+  // Attribue une phrase à un autre intervenant
+  async function corriger(phrase, choix) {
+    const t = transcriptionAffichee;
+    // On garde la position de l'écran : la liste est redessinée
+    const defilement = zoneTexte.scrollTop;
+    changerIntervenant(t, phrase, choix);
+    afficher(t);
+    zoneTexte.scrollTop = defilement;
+    await enregistrer(`✓ Phrase attribuée à « ${nomIntervenant(t, phrase.intervenant)} ».`);
+  }
+
+  // Enregistre la modification dans l'historique et prévient l'utilisateur
+  async function enregistrer(texteSucces) {
+    try {
+      await surModification(transcriptionAffichee);
+      afficherMessage(message, texteSucces, "succes");
+    } catch (erreur) {
+      console.error(erreur);
+      afficherMessage(message, "Le changement est affiché mais n'a pas pu être enregistré dans l'historique.", "erreur");
+    }
+  }
+
   return {
-    /**
-     * Affiche une transcription (en cours ou terminée)
-     * @param {object} transcription voir js/stockage/historique.js
-     * @param {{enCours?: boolean}} options
-     */
-    afficher(transcription, { enCours = false } = {}) {
-      transcriptionAffichee = transcription;
-      carte.hidden = false;
-      titre.textContent = transcription.titre;
-      infos.textContent = decrire(transcription) + (enCours ? " · transcription en cours…" : "");
-
-      // Une ligne par phrase : [00:12] Texte de la phrase
-      const lignes = avecIntervenants(transcription)
-        ? creerBlocs(transcription)
-        : transcription.phrases.map(creerLigne);
-      if (lignes.length === 0) {
-        const vide = document.createElement("p");
-        vide.className = "note";
-        vide.textContent = enCours ? "Le texte apparaîtra ici au fur et à mesure…" : "Aucune parole détectée.";
-        lignes.push(vide);
-      }
-      zoneTexte.replaceChildren(...lignes);
-
-      const desactive = enCours || transcription.phrases.length === 0;
-      boutonCopier.disabled = desactive;
-      boutonTelecharger.disabled = desactive;
-      boutonEffacer.disabled = enCours;
-      cacherMessage(message);
-    },
+    afficher,
 
     // Fait défiler l'écran jusqu'au résultat
     montrer() {
@@ -113,11 +185,6 @@ function avecIntervenants(t) {
   return Array.isArray(t.intervenants) && t.intervenants.length > 0;
 }
 
-// Nom affiché d'un intervenant (« Intervenant 1 » par défaut)
-export function nomIntervenant(t, numero) {
-  return t.intervenants?.[numero]?.nom || `Intervenant ${numero + 1}`;
-}
-
 // Une phrase : [00:12] Texte
 function creerLigne(phrase) {
   const ligne = document.createElement("p");
@@ -136,13 +203,10 @@ function creerBlocs(t) {
     if (!courant || courant.intervenant !== phrase.intervenant) {
       const bloc = document.createElement("div");
       bloc.className = "bloc-voix";
-      bloc.style.setProperty("--couleur-voix", `var(--voix-${(phrase.intervenant ?? 0) % 6})`);
+      bloc.style.setProperty("--couleur-voix", couleurIntervenant(phrase.intervenant));
       const nom = document.createElement("p");
       nom.className = "bloc-voix__nom";
-      const pastille = document.createElement("span");
-      pastille.className = "pastille";
-      pastille.setAttribute("aria-hidden", "true");
-      nom.append(pastille, nomIntervenant(t, phrase.intervenant ?? 0));
+      nom.append(creerPastille(), nomIntervenant(t, phrase.intervenant ?? 0));
       bloc.append(nom);
       blocs.push(bloc);
       courant = { intervenant: phrase.intervenant, bloc };
@@ -158,7 +222,8 @@ function decrire(t) {
   const parties = [formaterDate(t.creeLe), formaterDuree(t.duree), langue];
   if (QUALITES[t.qualite]) parties.push(`qualité ${QUALITES[t.qualite].nom}`);
   if (avecIntervenants(t)) {
-    const n = t.intervenants.length;
+    // On ne compte que les intervenants qui ont au moins une phrase
+    const n = new Set(t.phrases.map((p) => p.intervenant ?? 0)).size;
     parties.push(`${n} intervenant${n > 1 ? "s" : ""}`);
   }
   if (t.interrompue) parties.push("interrompue");

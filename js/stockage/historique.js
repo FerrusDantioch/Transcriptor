@@ -9,7 +9,8 @@
 //   source: "micro" | "fichier",
 //   langue: "fr",
 //   qualite: "equilibre",
-//   phrases: [{ debut: 0, fin: 4.2, texte: "Bonjour à tous." }, …],
+//   phrases: [{ debut: 0, fin: 4.2, texte: "Bonjour à tous.", intervenant: 0 }, …],
+//   intervenants: [{ nom: "Marie" }, { nom: "Intervenant 2" }],  (si reconnus)
 //   interrompue: false
 // }
 // ==========================================================
@@ -43,6 +44,14 @@ export async function lireTranscription(id) {
   const base = await ouvrirBase();
   const transaction = base.transaction(TIROIR_TRANSCRIPTIONS, "readonly");
   return attendre(transaction.objectStore(TIROIR_TRANSCRIPTIONS).get(id));
+}
+
+// Enregistre une transcription modifiée (noms des intervenants, corrections…)
+export async function mettreAJourTranscription(transcription) {
+  const base = await ouvrirBase();
+  const transaction = base.transaction(TIROIR_TRANSCRIPTIONS, "readwrite");
+  transaction.objectStore(TIROIR_TRANSCRIPTIONS).put(transcription);
+  await finDeTransaction(transaction);
 }
 
 // Change le titre d'une transcription

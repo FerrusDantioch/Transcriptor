@@ -30,6 +30,8 @@
   --voix-3: #8e24aa;
   --voix-4: #c62828;
   --voix-5: #00796b;
+  --voix-6: #ad1457;
+  --voix-7: #6d4c41;
 }
 
 /* ---------- Couleurs du thème sombre ----------
@@ -57,6 +59,8 @@
     --voix-3: #d7aefb;
     --voix-4: #f28b82;
     --voix-5: #78d9cc;
+    --voix-6: #f48fb1;
+    --voix-7: #d7b19d;
   }
 }
 
@@ -395,6 +399,75 @@ legend {
   border-radius: 50%;
   background: var(--couleur-voix, var(--accent));
   flex-shrink: 0;
+}
+
+/* ---------- Liste des intervenants (renommer, corriger) ---------- */
+.legende-voix {
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  border: 1px solid var(--bordure);
+  border-radius: 0.75rem;
+}
+
+.legende-voix__titre {
+  margin: 0 0 0.5rem;
+  font-weight: 700;
+}
+
+.legende-voix ul {
+  list-style: none;
+  margin: 0 0 0.75rem;
+  padding: 0;
+}
+
+.legende-voix li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.4rem 0;
+  border-left: 0.35rem solid var(--couleur-voix, var(--accent));
+  padding-left: 0.6rem;
+  margin-bottom: 0.35rem;
+}
+
+.legende-voix__nom {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.legende-voix .bouton {
+  width: auto;
+}
+
+.legende-voix > .bouton {
+  width: 100%;
+}
+
+.legende-voix > p.petit {
+  margin: 0.5rem 0 0;
+}
+
+/* Une phrase en mode « Corriger qui parle » */
+.ligne-corrigible {
+  border-left: 0.35rem solid var(--couleur-voix, var(--accent));
+  padding: 0.4rem 0 0.4rem 0.75rem;
+  margin: 0.5rem 0;
+}
+
+.ligne-corrigible p {
+  margin: 0.25rem 0 0;
+}
+
+.liste-deroulante--petite {
+  min-height: 2.75rem;
+  margin-bottom: 0;
+  padding: 0.3rem 0.5rem;
+  font-weight: 600;
 }
 
 /* ---------- Historique ---------- */
