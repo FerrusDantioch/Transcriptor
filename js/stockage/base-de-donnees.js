@@ -8,12 +8,15 @@
 // ==========================================================
 
 const NOM_BASE = "transcriptor";
-const VERSION_BASE = 1;
+// Version 2 : ajout des captures de sessions en direct (Mode JDR)
+const VERSION_BASE = 2;
 
 // Noms des « tiroirs » (object stores) de la base
 export const TIROIR_TRANSCRIPTIONS = "transcriptions";   // historique
 export const TIROIR_TELECHARGEMENTS = "telechargements"; // suivi des téléchargements en cours
 export const TIROIR_MORCEAUX = "morceaux";               // morceaux déjà téléchargés
+export const TIROIR_CAPTURES = "captures";               // captures en direct (durée, état…)
+export const TIROIR_BLOCS_CAPTURE = "blocs-capture";     // le son des captures, par blocs de 5 s
 
 let promesseBase = null;
 
@@ -40,9 +43,24 @@ export function ouvrirBase() {
       if (!base.objectStoreNames.contains(TIROIR_MORCEAUX)) {
         base.createObjectStore(TIROIR_MORCEAUX, { keyPath: ["url", "index"] });
       }
+      if (!base.objectStoreNames.contains(TIROIR_CAPTURES)) {
+        base.createObjectStore(TIROIR_CAPTURES, { keyPath: "id", autoIncrement: true });
+      }
+      if (!base.objectStoreNames.contains(TIROIR_BLOCS_CAPTURE)) {
+        // Clé : [numéro de la capture, piste ("micro" ou "autres"), numéro du bloc]
+        base.createObjectStore(TIROIR_BLOCS_CAPTURE, { keyPath: ["capture", "piste", "index"] });
+      }
     };
 
-    demande.onsuccess = () => resoudre(demande.result);
+    demande.onsuccess = () => {
+      const base = demande.result;
+      // Une version plus récente de l'application s'ouvre ailleurs : on lui laisse la place
+      base.onversionchange = () => {
+        base.close();
+        promesseBase = null;
+      };
+      resoudre(base);
+    };
     demande.onerror = () => {
       promesseBase = null;
       rejeter(demande.error);

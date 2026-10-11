@@ -25,6 +25,8 @@ import { creerCarteResultat } from "./interface/carte-resultat.js";
 import { creerCarteHistorique } from "./interface/carte-historique.js";
 import { creerReglages } from "./interface/reglages.js";
 import { creerZoneIntervenants } from "./interface/zone-intervenants.js";
+import { creerCarteJdr } from "./interface/carte-jdr.js";
+import { creerListeCaptures } from "./interface/liste-captures.js";
 import { texteEchecVoix } from "./interface/messages.js";
 import { diariserAudio } from "./voix/diariser-audio.js";
 import { attribuerIntervenants } from "./voix/attribution.js";
@@ -180,6 +182,8 @@ function changerEtat(nouvelEtat) {
   const reglagesModifiables = !occupe && !["verification", "telechargement", "chargement"].includes(etatModele);
   interfaceReglages.activer(reglagesModifiables);
   zoneIntervenants.activer(!occupe);
+  carteJdr.activer(!occupe);
+  listeCaptures.activer(!occupe);
 }
 
 // La connexion revient : on relance le téléchargement interrompu
@@ -239,6 +243,38 @@ function telechargerModelesVoix() {
     .demander("preparerVoix", { charger: false })
     .then(() => zoneIntervenants.afficherEtat({ present: true }))
     .catch((erreur) => zoneIntervenants.afficherErreur(erreur.code ?? codeErreur(erreur)));
+}
+
+// ---------------------------------------------------------------
+// Mode JDR : importer une partie, ou la capturer en direct (ordinateur)
+// ---------------------------------------------------------------
+const carteJdr = creerCarteJdr({
+  reglages,
+  surReglage: (modifications) => {
+    reglages = enregistrerReglages(modifications);
+  },
+  surImporter: importerPartie,
+  // Pendant une capture, l'application est « occupée » : écran gardé allumé,
+  // pas de transcription en même temps (elle ralentirait Discord)
+  surDebutCapture: () => commencerTravail(),
+  surFinCapture: () => {
+    finirTravail();
+    listeCaptures.rafraichir();
+  },
+});
+
+const listeCaptures = creerListeCaptures({ surTranscrire: null });
+
+// « Importer l'enregistrement d'une partie » : on active la reconnaissance
+// des intervenants et on renvoie vers le choix du fichier
+function importerPartie() {
+  zoneIntervenants.allumer();
+  carteTranscription.afficherInfo(
+    "Mode JDR : indiquez le nombre de personnes qui parlent (vous compris), puis choisissez " +
+      "le fichier de la partie avec « 📁 Choisir un fichier audio »."
+  );
+  const reduire = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  document.getElementById("carte-transcription").scrollIntoView({ behavior: reduire ? "auto" : "smooth" });
 }
 
 const carteResultat = creerCarteResultat({
@@ -464,5 +500,6 @@ window.addEventListener("beforeunload", (e) => {
 // Démarrage
 // ---------------------------------------------------------------
 carteHistorique.rafraichir();
+listeCaptures.rafraichir();
 verifierModele();
 if (reglages.intervenants) verifierModelesVoix();

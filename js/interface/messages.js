@@ -36,6 +36,15 @@ const TEXTES_ERREUR = {
   introuvable:
     "Le modèle est introuvable sur le serveur pour le moment. Réessayez plus tard, " +
     "ou choisissez une autre qualité dans les réglages.",
+  "partage-annule":
+    "Le partage a été annulé : la capture n'a pas démarré. Appuyez de nouveau sur « Démarrer la capture », " +
+    "puis choisissez quoi partager et cliquez sur « Partager ».",
+  "partage-sans-son":
+    "Le partage ne contient pas de son : la case « Partager aussi l'audio » n'était pas cochée. " +
+    "Recommencez en cochant cette case, en bas de la fenêtre de partage de Chrome " +
+    "(avec « Écran entier » pour l'application Discord).",
+  "partage-impossible":
+    "Le partage du son n'a pas pu démarrer. Utilisez Chrome ou Edge à jour sur ordinateur, puis réessayez.",
   inconnue: "Un problème inattendu est survenu. Réessayez ; si cela recommence, rechargez la page.",
 };
 

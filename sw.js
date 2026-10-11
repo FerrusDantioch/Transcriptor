@@ -10,7 +10,7 @@
 // ⚠️ À CHAQUE MODIFICATION d'un fichier de l'application, augmenter ce
 // numéro (v1 → v2 → v3…). Sinon les téléphones garderont l'ancienne
 // version en réserve.
-const VERSION_CACHE = "transcriptor-app-v8";
+const VERSION_CACHE = "transcriptor-app-v9";
 
 // Liste des fichiers à garder en réserve.
 // Chemins relatifs : ils fonctionnent aussi dans le sous-dossier GitHub Pages.
@@ -29,6 +29,7 @@ const FICHIERS_APPLICATION = [
   "./js/stockage/base-de-donnees.js",
   "./js/stockage/historique.js",
   "./js/stockage/reglages.js",
+  "./js/stockage/captures.js",
   "./js/audio/decoder-audio.js",
   "./js/audio/decoupage.js",
   "./js/audio/enregistreur.js",
@@ -39,6 +40,9 @@ const FICHIERS_APPLICATION = [
   "./js/transcription/transcrire-audio.js",
   "./js/transcription/worker.js",
   "./js/interface/carte-historique.js",
+  "./js/interface/carte-jdr.js",
+  "./js/interface/fenetre-consentement.js",
+  "./js/interface/liste-captures.js",
   "./js/interface/carte-modele.js",
   "./js/interface/carte-resultat.js",
   "./js/interface/carte-transcription.js",
@@ -50,6 +54,10 @@ const FICHIERS_APPLICATION = [
   "./js/voix/attribution.js",
   "./js/voix/diariser-audio.js",
   "./js/voix/regroupement.js",
+  "./js/capture/compatibilite.js",
+  "./js/capture/export-wav.js",
+  "./js/capture/processeur-capture.js",
+  "./js/capture/session-capture.js",
   "./js/outils/anti-veille.js",
   "./js/outils/format.js",
   "./vendor/transformers/transformers.min.js",

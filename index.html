@@ -146,6 +146,136 @@
         <p id="transcription-message" class="message" role="status" hidden></p>
       </section>
 
+      <!-- ====== Mode JDR : importer une partie ou la capturer en direct ====== -->
+      <section class="carte" id="carte-jdr" aria-labelledby="titre-jdr">
+        <h2 id="titre-jdr">🎲 Mode JDR</h2>
+        <p class="petit">Transcrire une partie de jeu de rôle, avec le nom de chaque joueur.</p>
+        <div class="boutons">
+          <button type="button" class="bouton" id="bouton-jdr-importer">
+            📁 Importer l'enregistrement d'une partie
+          </button>
+          <button type="button" class="bouton" id="bouton-jdr-capturer" aria-expanded="false" aria-controls="zone-capture">
+            🔴 Capturer une session en direct (ordinateur)
+          </button>
+        </div>
+
+        <div id="zone-capture" class="zone-capture" hidden>
+          <!-- Téléphone ou navigateur incompatible -->
+          <div id="capture-incompatible" hidden>
+            <p id="capture-incompatible-texte" class="message" data-type="erreur"></p>
+            <div class="boutons">
+              <button type="button" class="bouton" id="bouton-capture-importer">
+                📁 Importer un fichier à la place
+              </button>
+            </div>
+          </div>
+
+          <!-- Préparation -->
+          <div id="capture-preparation" hidden>
+            <p id="capture-avertissement" class="message" data-type="erreur" hidden></p>
+            <label class="etiquette" for="capture-nom">Votre nom dans le texte</label>
+            <input type="text" id="capture-nom" class="champ-texte" maxlength="40" autocomplete="nickname" />
+            <label class="etiquette" for="capture-autres">Nombre d'autres joueurs (sans vous)</label>
+            <select id="capture-autres" class="liste-deroulante">
+              <option value="auto">Automatique</option>
+              <option value="1">1 autre joueur</option>
+              <option value="2">2 autres joueurs</option>
+              <option value="3">3 autres joueurs</option>
+              <option value="4">4 autres joueurs</option>
+              <option value="5">5 autres joueurs</option>
+              <option value="6">6 autres joueurs</option>
+            </select>
+            <label class="etiquette" for="capture-source">Discord est ouvert…</label>
+            <select id="capture-source" class="liste-deroulante">
+              <option value="application">dans l'application Discord (Windows)</option>
+              <option value="onglet">dans un onglet de Chrome ou Edge</option>
+            </select>
+            <ol id="capture-etapes" class="etapes"></ol>
+            <p id="capture-espace" class="petit"></p>
+            <div class="boutons">
+              <button type="button" class="bouton bouton--principal" id="bouton-capture-demarrer">
+                🔴 Démarrer la capture
+              </button>
+            </div>
+          </div>
+
+          <!-- Capture en cours -->
+          <div id="capture-en-cours" hidden>
+            <p class="chrono">
+              <span class="point-rouge" aria-hidden="true"></span>
+              Capture en cours :
+              <strong id="capture-chrono" aria-live="off">00:00</strong>
+            </p>
+            <div class="niveau">
+              <label for="niveau-micro">🎙️ <span id="niveau-micro-nom">Moi</span> (votre micro)</label>
+              <progress id="niveau-micro" class="niveau__barre" max="100" value="0"></progress>
+              <p id="niveau-micro-etat" class="petit"></p>
+            </div>
+            <div class="niveau">
+              <label for="niveau-autres">🎧 Autres joueurs (son partagé)</label>
+              <progress id="niveau-autres" class="niveau__barre" max="100" value="0"></progress>
+              <p id="niveau-autres-etat" class="petit"></p>
+            </div>
+            <p id="capture-taille" class="petit"></p>
+            <p id="capture-alerte" class="message" role="status" hidden></p>
+            <div class="boutons">
+              <button type="button" class="bouton" id="bouton-reprendre-partage" hidden>
+                🔁 Reprendre le partage du son
+              </button>
+              <button type="button" class="bouton" id="bouton-reprendre-micro" hidden>
+                🔁 Reprendre le micro
+              </button>
+              <button type="button" class="bouton bouton--principal" id="bouton-capture-arreter">
+                ⏹️ Arrêter la capture
+              </button>
+            </div>
+            <p class="petit">
+              Vous pouvez passer sur Discord : la capture continue en arrière-plan.
+              Ne fermez pas cet onglet et ne mettez pas l'ordinateur en veille.
+            </p>
+          </div>
+
+          <p id="capture-message" class="message" role="status" hidden></p>
+        </div>
+
+        <!-- Captures déjà enregistrées (sur cet appareil) -->
+        <div id="zone-captures" hidden>
+          <h3>Captures enregistrées</h3>
+          <ul id="liste-captures" class="liste-historique"></ul>
+          <p id="captures-message" class="message" role="status" hidden></p>
+        </div>
+      </section>
+
+      <!-- Rappel de consentement, avant chaque capture -->
+      <dialog id="fenetre-consentement" class="fenetre" aria-labelledby="titre-consentement">
+        <h2 id="titre-consentement">Avant d'enregistrer</h2>
+        <p>
+          Enregistrer des personnes sans leur accord est interdit (en France : article 226-1
+          du Code pénal). C'est aussi une question de confiance entre joueurs.
+        </p>
+        <ul>
+          <li>Prévenez <strong>tous</strong> les joueurs que la partie sera enregistrée et transcrite.</li>
+          <li>Vérifiez que chacun est d'accord.</li>
+          <li>
+            Conseil : annoncez-le au début de l'enregistrement (« On enregistre la partie,
+            tout le monde est d'accord ? ») : l'accord de chacun sera dans l'enregistrement.
+          </li>
+          <li>L'enregistrement reste sur cet ordinateur : rien n'est envoyé sur internet.</li>
+        </ul>
+        <div class="choix">
+          <input type="checkbox" id="case-consentement" />
+          <label for="case-consentement">
+            <strong>Tous les participants sont prévenus et d'accord pour être enregistrés.</strong>
+          </label>
+        </div>
+        <div class="boutons">
+          <button type="button" class="bouton bouton--principal" id="bouton-consentement-ok" disabled>
+            Continuer
+          </button>
+          <button type="button" class="bouton bouton--discret" id="bouton-consentement-annuler">Annuler</button>
+        </div>
+      </dialog>
+
       <!-- ====== 3. Résultat ====== -->
       <section class="carte" id="carte-resultat" aria-labelledby="resultat-titre" hidden>
         <h2 id="resultat-titre">Résultat</h2>

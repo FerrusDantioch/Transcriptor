@@ -1,5 +1,5 @@
 // ==========================================================
-// Réglages de l'utilisateur (qualité, moteur, vitesse, langue, intervenants).
+// Réglages de l'utilisateur (qualité, moteur, vitesse, langue, intervenants, Mode JDR).
 // Ils sont gardés dans le « localStorage » du navigateur :
 // un petit espace de stockage simple, qui reste sur l'appareil.
 // ==========================================================
@@ -41,6 +41,14 @@ export function lireReglages() {
     // Reconnaissance des intervenants : désactivée par défaut, nombre de voix automatique
     intervenants: enregistres.intervenants === true,
     nombreVoix: ["auto", "2", "3", "4", "5", "6"].includes(enregistres.nombreVoix) ? enregistres.nombreVoix : "auto",
+    // Mode JDR, capture en direct : mon nom, nombre d'autres joueurs, où tourne Discord
+    nomJoueur: typeof enregistres.nomJoueur === "string" && enregistres.nomJoueur.trim()
+      ? enregistres.nomJoueur.trim().slice(0, 40)
+      : "Moi",
+    nombreAutres: ["auto", "1", "2", "3", "4", "5", "6"].includes(enregistres.nombreAutres)
+      ? enregistres.nombreAutres
+      : "auto",
+    sourceDiscord: enregistres.sourceDiscord === "onglet" ? "onglet" : "application",
     langue: LANGUES.some((l) => l.code === enregistres.langue)
       ? enregistres.langue
       : LANGUE_PAR_DEFAUT,
