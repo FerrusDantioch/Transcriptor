@@ -58,7 +58,12 @@ export function creerListeCaptures({ surTranscrire }) {
         "jusque-là est conservé et peut être transcrit.";
       element.append(alerte);
     }
-    if (fiche.transcription?.id) {
+    if (fiche.avancement) {
+      const info = document.createElement("p");
+      info.className = "petit";
+      info.textContent = "⏸️ Transcription commencée : « Transcrire » la reprendra là où elle s'est arrêtée.";
+      element.append(info);
+    } else if (fiche.transcription?.id) {
       const info = document.createElement("p");
       info.className = "petit";
       info.textContent = "✓ Déjà transcrite (voir l'historique).";

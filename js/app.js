@@ -7,7 +7,7 @@
 
 import { enregistrerServiceWorker } from "./pwa/register-service-worker.js";
 import { preparerBoutonInstallation } from "./pwa/install-button.js";
-import { QUALITES, nombreDeCoeurs } from "./config.js";
+import { QUALITES, FREQUENCE_AUDIO, nombreDeCoeurs } from "./config.js";
 import { lireReglages, enregistrerReglages } from "./stockage/reglages.js";
 import { ajouterTranscription, mettreAJourTranscription } from "./stockage/historique.js";
 import { MoteurTranscription } from "./transcription/client-moteur.js";
@@ -18,7 +18,7 @@ import { effacerTousLesTelechargements } from "./transcription/telechargement-re
 import { decoderAudio } from "./audio/decoder-audio.js";
 import { Enregistreur } from "./audio/enregistreur.js";
 import { garderEcranAllume, laisserEcranSEteindre } from "./outils/anti-veille.js";
-import { formaterDate } from "./outils/format.js";
+import { formaterDate, formaterDuree } from "./outils/format.js";
 import { creerCarteModele } from "./interface/carte-modele.js";
 import { creerCarteTranscription } from "./interface/carte-transcription.js";
 import { creerCarteResultat } from "./interface/carte-resultat.js";
@@ -27,6 +27,8 @@ import { creerReglages } from "./interface/reglages.js";
 import { creerZoneIntervenants } from "./interface/zone-intervenants.js";
 import { creerCarteJdr } from "./interface/carte-jdr.js";
 import { creerListeCaptures } from "./interface/liste-captures.js";
+import { transcrireCapture } from "./capture/transcrire-capture.js";
+import { mettreAJourCapture } from "./stockage/captures.js";
 import { texteEchecVoix } from "./interface/messages.js";
 import { diariserAudio } from "./voix/diariser-audio.js";
 import { attribuerIntervenants } from "./voix/attribution.js";
@@ -263,7 +265,7 @@ const carteJdr = creerCarteJdr({
   },
 });
 
-const listeCaptures = creerListeCaptures({ surTranscrire: null });
+const listeCaptures = creerListeCaptures({ surTranscrire: traiterCapture });
 
 // « Importer l'enregistrement d'une partie » : on active la reconnaissance
 // des intervenants et on renvoie vers le choix du fichier
@@ -463,6 +465,93 @@ async function traiterAudio(fichierAudio, { titre, source }) {
     }
   } finally {
     finirTravail();
+  }
+}
+
+// ---------------------------------------------------------------
+// Transcription d'une capture en direct (Mode JDR), après la session
+// ---------------------------------------------------------------
+async function traiterCapture(fiche) {
+  const reduire = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (!["pret", "disponible", "chargement"].includes(etatModele)) {
+    carteTranscription.afficherInfo(
+      "Le modèle de reconnaissance vocale doit d'abord être téléchargé (carte tout en haut), " +
+        "puis appuyez de nouveau sur « 📝 Transcrire » dans le Mode JDR."
+    );
+    document.getElementById("carte-modele").scrollIntoView({ behavior: reduire ? "auto" : "smooth" });
+    return;
+  }
+  if (fiche.transcription?.id && !fiche.avancement) {
+    if (!confirm("Cette capture a déjà été transcrite. La transcrire à nouveau (par exemple avec une autre qualité) ?")) return;
+  }
+  commencerTravail();
+  demandeArret = false;
+  carteTranscription.afficherLecture();
+  document.getElementById("carte-transcription").scrollIntoView({ behavior: reduire ? "auto" : "smooth" });
+
+  const transcription = {
+    titre: fiche.titre,
+    creeLe: Date.now(),
+    duree: fiche.echantillons / FREQUENCE_AUDIO,
+    source: "capture",
+    langue: reglages.langue,
+    qualite: reglages.qualite,
+    phrases: [],
+    intervenants: [{ nom: fiche.nomJoueur }],
+    interrompue: false,
+  };
+  const etapes = { micro: "Transcription de votre piste (1/2)…", autres: "Transcription de la piste des autres joueurs (2/2)…" };
+
+  try {
+    const chargement = attendreModelePret();
+    chargement.catch(() => {});
+    if (etatModele !== "pret") carteTranscription.afficherPreparation();
+    await chargement;
+    carteResultat.afficher(transcription, { enCours: true });
+
+    const resultat = await transcrireCapture(fiche, {
+      moteur,
+      langue: reglages.langue,
+      qualite: reglages.qualite,
+      doitArreter: () => demandeArret,
+      surTexte: (phrases, intervenants) => {
+        transcription.phrases = phrases;
+        transcription.intervenants = intervenants;
+        carteResultat.afficher(transcription, { enCours: true });
+      },
+      surAvancement: (piste, numero, total, resteEstime) =>
+        carteTranscription.majAvancement(numero, total, resteEstime, etapes[piste]),
+      surDiarisation: (numero, total) => carteTranscription.majDiarisation(numero, total),
+    });
+
+    if (resultat.interrompue) {
+      carteResultat.afficher(transcription);
+      carteTranscription.afficherInfo(
+        "Transcription mise en pause. Appuyez de nouveau sur « 📝 Transcrire » dans le Mode JDR : " +
+          "elle reprendra là où elle s'est arrêtée (avec la même langue et la même qualité)."
+      );
+      return;
+    }
+
+    transcription.phrases = resultat.phrases;
+    transcription.intervenants = resultat.intervenants;
+    await sauvegarder(transcription);
+    // La capture garde le lien vers son texte ; l'avancement n'est plus utile
+    fiche.transcription = { id: transcription.id, le: Date.now() };
+    fiche.avancement = null;
+    await mettreAJourCapture(fiche).catch((e) => console.error(e));
+
+    carteResultat.afficher(transcription);
+    carteResultat.montrer();
+    const fin = `✓ Transcription terminée (${formaterDuree(transcription.duree)} de partie) et enregistrée dans l'historique.`;
+    carteTranscription.afficherInfo(resultat.infoVoix ? `${fin} ${resultat.infoVoix}` : `${fin} Renommez les intervenants dans le résultat.`);
+  } catch (erreur) {
+    console.error(erreur);
+    carteTranscription.afficherErreur(erreur.code ?? codeErreur(erreur));
+    if (transcription.phrases.length > 0) carteResultat.afficher(transcription);
+  } finally {
+    finirTravail();
+    listeCaptures.rafraichir();
   }
 }
 

@@ -10,7 +10,7 @@
 // ⚠️ À CHAQUE MODIFICATION d'un fichier de l'application, augmenter ce
 // numéro (v1 → v2 → v3…). Sinon les téléphones garderont l'ancienne
 // version en réserve.
-const VERSION_CACHE = "transcriptor-app-v9";
+const VERSION_CACHE = "transcriptor-app-v10";
 
 // Liste des fichiers à garder en réserve.
 // Chemins relatifs : ils fonctionnent aussi dans le sous-dossier GitHub Pages.
@@ -56,8 +56,10 @@ const FICHIERS_APPLICATION = [
   "./js/voix/regroupement.js",
   "./js/capture/compatibilite.js",
   "./js/capture/export-wav.js",
+  "./js/capture/piste-audio.js",
   "./js/capture/processeur-capture.js",
   "./js/capture/session-capture.js",
+  "./js/capture/transcrire-capture.js",
   "./js/outils/anti-veille.js",
   "./js/outils/format.js",
   "./vendor/transformers/transformers.min.js",

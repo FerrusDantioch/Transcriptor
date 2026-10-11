@@ -119,10 +119,11 @@ export function creerCarteTranscription({
       }
     },
 
-    majAvancement(numero, total, resteEstime) {
+    // titre : texte affiché au-dessus de la barre (par défaut « Transcription en cours… »)
+    majAvancement(numero, total, resteEstime, titre) {
       boutonArreterTranscription.hidden = false;
       if (numero === 0) boutonArreterTranscription.disabled = false;
-      traitementTexte.textContent = "Transcription en cours…";
+      traitementTexte.textContent = titre ?? "Transcription en cours…";
       traitementBarre.value = total > 0 ? Math.round((numero / total) * 100) : 0;
       let texte = `Morceau ${numero} sur ${total}`;
       if (numero === 0) texte = `${total} morceau${total > 1 ? "x" : ""} à traiter`;

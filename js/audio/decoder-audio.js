@@ -32,7 +32,7 @@ export async function decoderAudio(fichier) {
 /**
  * Extrait un passage de l'audio, en mono (une seule voie),
  * sans copier tout le fichier : on ne lit que le passage demandé.
- * @param {AudioBuffer} audio
+ * @param {AudioBuffer|import("../capture/piste-audio.js").PisteAudio} audio
  * @param {number} debut en secondes
  * @param {number} fin en secondes
  * @returns {Float32Array}
@@ -40,6 +40,8 @@ export async function decoderAudio(fichier) {
 export function extraireMono(audio, debut, fin) {
   const premier = Math.max(0, Math.floor(debut * audio.sampleRate));
   const dernier = Math.min(audio.length, Math.ceil(fin * audio.sampleRate));
+  // Piste d'une capture en direct : elle sait extraire un passage elle-même
+  if (typeof audio.extraire === "function") return audio.extraire(premier, dernier);
   const resultat = new Float32Array(Math.max(0, dernier - premier));
   const nbVoies = audio.numberOfChannels;
 
