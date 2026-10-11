@@ -18,6 +18,8 @@ Feuille de route :
 
 - Débutant complet en programmation.
 - **Toujours parler en français**, simplement, et expliquer chaque terme technique.
+  Cela vaut pour **tous** les messages, y compris les petites phrases
+  d'avancement pendant le travail (rappel de l'utilisateur).
 - Les **commentaires dans le code sont en français**.
 - Les **messages de commit sont en français**.
 
