@@ -52,6 +52,9 @@ Feuille de route :
    sur la branche de travail de la session ; à la fin de chaque étape testée,
    mettre aussi `main` à jour (`git push origin <branche>:main`), sans demander
    (choix « Option A » de l'utilisateur), puis lui dire comment tester.
+   Le Mode JDR « capture en direct » a été développé sur la branche séparée
+   `capture-discord` (demande de l'utilisateur), publiée aussi sur `main`.
+   Pour toute suite de travail, repartir de `main` (qui contient tout).
 4. Si un choix technique est **risqué ou limité** (ex. performances sur téléphone),
    le dire honnêtement et proposer une alternative.
 
@@ -72,6 +75,7 @@ js/transcription/          Web Worker (Whisper), téléchargement avec reprise, 
 js/interface/              une « carte » de l'écran par fichier + textes des messages
 js/outils/                 mise en forme, écran allumé
 js/voix/                   reconnaissance des intervenants (analyse, regroupement, attribution)
+js/capture/                Mode JDR, capture en direct sur ordinateur (AudioWorklet, pistes, transcription)
 modeles/voix/              modèles de voix hébergés avec l'app (pyannote + WeSpeaker, ≈ 32 Mo, voir son README)
 vendor/transformers/       Transformers.js + ONNX Runtime copiés depuis npm (voir son README)
 icons/                     icônes 192 et 512 px (« any » et « maskable »)
@@ -150,5 +154,24 @@ icons/                     icônes 192 et 512 px (« any » et « maskable »)
   Tests (voix de synthèse espeak) : interview 2 voix 10/10 ; JDR 4 voix 11-13/14
   (les voix de synthèse masculines se confondent). Analyse ≈ 10-15 % de la durée
   de l'audio sur ordinateur (1 cœur). Usages : interviews et séances de JDR (≤ 3 h).
+- **Mode JDR, capture en direct** (branche `capture-discord`, publiée aussi sur `main`) :
+  ordinateur seulement (Chrome/Edge). `getDisplayMedia` (son du système ou d'un onglet ;
+  l'image est imposée par Chrome mais ignorée) + `getUserMedia` (micro), réunis dans un
+  AudioContext à 16 kHz → `js/capture/processeur-capture.js` (AudioWorklet, 2 entrées,
+  0 sortie) → son brut Int16, blocs de 5 s dans IndexedDB (tiroirs `captures` et
+  `blocs-capture`, base en version 2). Pas de MediaRecorder : décoder 3 h compressées
+  saturerait la mémoire. Une capture « en cours » sans verrou Web Locks = interrompue.
+  Transcription APRÈS la session (`js/capture/transcrire-capture.js`) : piste micro =
+  intervenant 0 (nom du joueur), piste « autres » = diarisation, fusion par l'heure ;
+  avancement sauvegardé après chaque morceau (reprise). `PisteAudio` imite un AudioBuffer
+  (`extraireMono` appelle sa méthode `extraire`).
+  Sur Android : impossible (même une appli native ne peut pas capter le son d'un appel).
+  Tests : faux partage (`FAUX_PARTAGE` dans les tests) avec deux pistes espeak
+  (`session-moi.wav`, `session-autres.wav`) : 12/12 répliques sur la bonne piste,
+  synchronisation à 50 ms près, 10 s retrouvées sur 14 s après fermeture brutale.
+  Diarisation de la piste « autres » (3 voix) : 6/7 avec le nombre exact, 4/7 en automatique.
+- **Attribution des intervenants** : les segments de Whisper sont découpés en phrases
+  AVANT l'attribution (`decouperEnPhrases`) : deux personnes dans un même segment
+  retrouvent chacune leur voix (test : interview 10/10 au lieu d'une seule voix).
 - **Whisper sans aucun mot** sur un morceau : la bibliothèque plante
   (« token_ids must be a non-empty array ») → intercepté dans le worker (morceau ignoré).

@@ -148,9 +148,9 @@ export function creerCarteJdr({ reglages, surReglage, surImporter, surDebutCaptu
       const { quota, usage } = await navigator.storage.estimate();
       const libre = quota - usage;
       const heures = libre / OCTETS_PAR_SECONDE / 3600;
+      const possible = heures >= 10 ? "plus de 10 h" : `environ ${formaterDuree(heures * 3600)}`;
       espace.textContent =
-        `Espace disponible : environ ${heures >= 10 ? "plus de 10 h" : formaterDuree(heures * 3600)} ` +
-        `de capture (une heure occupe environ ${formaterTaille(OCTETS_PAR_SECONDE * 3600)}).`;
+        `Espace disponible : ${possible} de capture (une heure occupe environ ${formaterTaille(OCTETS_PAR_SECONDE * 3600)}).`;
       espace.dataset.peu = heures < 3 ? "oui" : "non";
     } catch {
       espace.textContent = "Une heure de capture occupe environ 230 Mo sur l'ordinateur.";
