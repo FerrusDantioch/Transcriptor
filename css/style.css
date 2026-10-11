@@ -470,6 +470,95 @@ legend {
   font-weight: 600;
 }
 
+/* ---------- Mode JDR : capture en direct ---------- */
+.zone-capture {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  border: 1px dashed var(--bordure);
+  border-radius: 0.75rem;
+}
+
+.zone-capture > div > p,
+.zone-capture > p {
+  margin: 0 0 0.75rem;
+}
+
+.champ-texte {
+  width: 100%;
+  min-height: 3rem;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 1rem;
+  border: 2px solid var(--bordure);
+  border-radius: 0.75rem;
+  background: var(--surface);
+  color: var(--texte);
+  font: inherit;
+}
+
+.champ-texte:focus-visible,
+.liste-deroulante:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.etapes {
+  margin: 0 0 0.75rem;
+  padding-left: 1.4rem;
+}
+
+.etapes li {
+  margin-bottom: 0.4rem;
+}
+
+/* Indicateurs de niveau sonore (une barre par piste) */
+.niveau {
+  margin-bottom: 0.75rem;
+}
+
+.niveau label {
+  display: block;
+  font-weight: 600;
+}
+
+.niveau p {
+  margin: 0.2rem 0 0;
+}
+
+.niveau__barre {
+  height: 1.5rem;
+}
+
+/* Fenêtre de consentement */
+.fenetre {
+  max-width: min(30rem, calc(100vw - 2rem));
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+  padding: 1rem;
+  border: 2px solid var(--accent);
+  border-radius: 1rem;
+  background: var(--surface);
+  color: var(--texte);
+}
+
+.fenetre::backdrop {
+  background: rgb(0 0 0 / 0.6);
+}
+
+.fenetre ul {
+  padding-left: 1.2rem;
+}
+
+.fenetre li {
+  margin-bottom: 0.4rem;
+}
+
+.fenetre .choix {
+  margin: 0.75rem 0 1rem;
+  padding: 0.6rem;
+  border: 1px solid var(--bordure);
+  border-radius: 0.5rem;
+}
+
 /* ---------- Historique ---------- */
 .liste-historique {
   list-style: none;

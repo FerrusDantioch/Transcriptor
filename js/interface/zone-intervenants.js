@@ -84,6 +84,14 @@ export function creerZoneIntervenants({ intervenants, nombreVoix, surChangement,
       etat.textContent = texteErreur(code);
     },
 
+    // Active la reconnaissance des intervenants (bouton « Importer une partie » du Mode JDR)
+    allumer() {
+      if (interrupteur.checked) return;
+      interrupteur.checked = true;
+      zone.hidden = false;
+      surChangement({ intervenants: true });
+    },
+
     // Grise les choix pendant un enregistrement ou une transcription
     activer(actif) {
       interrupteur.disabled = !actif;
