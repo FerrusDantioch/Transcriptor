@@ -510,6 +510,40 @@ legend {
   margin-bottom: 0.4rem;
 }
 
+/* Encadrés repliables « Conseils » et « Limites » */
+.conseils {
+  margin: 0 0 1rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--bordure);
+  border-radius: 0.75rem;
+  background: var(--fond);
+}
+
+.conseils summary {
+  cursor: pointer;
+  font-weight: 700;
+  padding: 0.4rem 0; /* zone facile à toucher (le triangle ▸ reste visible) */
+}
+
+.conseils summary:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.conseils h3 {
+  margin: 0.75rem 0 0.25rem;
+  font-size: 1rem;
+}
+
+.conseils ul {
+  margin: 0.25rem 0 0.5rem;
+  padding-left: 1.2rem;
+}
+
+.conseils li {
+  margin-bottom: 0.4rem;
+}
+
 /* Indicateurs de niveau sonore (une barre par piste) */
 .niveau {
   margin-bottom: 0.75rem;

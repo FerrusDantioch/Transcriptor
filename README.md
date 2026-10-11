@@ -12,8 +12,9 @@
 - 🇫🇷 Interface en français ; transcription en français par défaut, avec
   d'autres langues au choix.
 
-> **État actuel :** étape 1 en place : transcription d'une voix (micro ou
-> fichier), entièrement sur l'appareil, avec historique.
+> **État actuel :** étapes 1 et 2 en place : transcription (micro ou fichier),
+> reconnaissance des intervenants (renommer, corriger), et **Mode JDR** avec
+> capture d'une session Discord en direct sur ordinateur.
 
 ## Feuille de route
 
@@ -96,6 +97,21 @@ plus tard.
   Nombre de personnes : automatique ou de 2 à 6 (plus fiable). Modèles de voix
   ≈ 32 Mo, téléchargés une fois. En cas d'échec, le texte est gardé sans
   distinction de voix.
+- **Renommer les intervenants** (« Intervenant 1 » → « Marie ») : le nom change
+  partout (texte, copie, .txt, historique). **Corriger qui parle** : une liste
+  devant chaque phrase pour choisir la bonne personne.
+- **Mode JDR** :
+  - « Importer l'enregistrement d'une partie » : import de fichier avec la
+    reconnaissance des intervenants ;
+  - « Capturer une session en direct (ordinateur) », Chrome ou Edge : mon micro
+    sur une piste, le son de Discord (les autres joueurs) sur une autre, grâce
+    au partage d'écran avec le son. Rappel de consentement obligatoire,
+    indicateurs de niveau, sauvegarde toutes les 5 s (≈ 230 Mo par heure),
+    reprise après plantage, export des pistes en .wav. Transcription **après**
+    la session : ma piste à mon nom, la piste des autres séparée en intervenants,
+    fusion dans l'ordre du temps ; elle peut être arrêtée et reprise.
+  - Sur téléphone, la capture est impossible (Android interdit d'écouter le son
+    d'une autre application) : un message renvoie vers l'import de fichier.
 
 ### Temps de traitement attendus (estimations)
 
@@ -127,6 +143,7 @@ js/transcription/     modèle Whisper (Web Worker) et téléchargement avec repr
 js/interface/         les différentes zones de l'écran
 js/outils/            petits outils (format des dates, écran allumé)
 js/voix/              reconnaissance des intervenants
+js/capture/           Mode JDR : capture en direct (micro + son partagé), pistes, transcription
 modeles/voix/         modèles de voix (pyannote, WeSpeaker) et leurs licences
 vendor/transformers/  bibliothèques externes copiées telles quelles
 icons/                icônes de l'application

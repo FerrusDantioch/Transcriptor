@@ -87,6 +87,28 @@
               Plus fiable si vous indiquez le nombre exact. Fonctionne mieux quand les personnes
               ne parlent pas en même temps, sans bruit de fond. Ajoute environ 15 à 30 % de temps de calcul.
             </p>
+            <details class="conseils">
+              <summary>💡 Conseils pour un bon enregistrement</summary>
+              <ul>
+                <li>
+                  Posez le téléphone au milieu, à distance égale de chacun, sur un tissu plutôt que
+                  directement sur la table (les dés et les verres résonnent).
+                </li>
+                <li>Choisissez une pièce calme : pas de musique, de télévision ni de fenêtre ouverte sur la rue.</li>
+                <li>Une personne parle à la fois : les voix qui se chevauchent sont mal reconnues.</li>
+                <li>
+                  Demandez à chacun de dire son prénom au début : il sera facile ensuite de renommer
+                  « Intervenant 1 », « Intervenant 2 »…
+                </li>
+                <li>Indiquez le nombre exact de personnes (« Automatique » en trouve souvent trop).</li>
+                <li>Avant une longue séance, faites un essai de 30 secondes.</li>
+              </ul>
+              <p class="petit">
+                <strong>Limites :</strong> les voix qui se chevauchent, le bruit de fond, les voix qui se
+                ressemblent et les réponses très courtes (« oui », « d'accord ») sont souvent mal attribués.
+                Corrigez-les avec « Corriger qui parle » dans le résultat.
+              </p>
+            </details>
             <p id="voix-etat" class="petit"></p>
             <progress id="voix-barre" max="100" hidden></progress>
             <div class="boutons">
@@ -190,7 +212,88 @@
               <option value="application">dans l'application Discord (Windows)</option>
               <option value="onglet">dans un onglet de Chrome ou Edge</option>
             </select>
+            <p class="petit">
+              Indiquez le nombre exact d'autres joueurs : « Automatique » en trouve souvent trop.
+              Votre voix, captée à part, est toujours reconnue.
+            </p>
             <ol id="capture-etapes" class="etapes"></ol>
+            <details class="conseils">
+              <summary>💡 Conseils de réglage (Discord et Windows)</summary>
+              <h3>Avant tout</h3>
+              <ul>
+                <li>
+                  <strong>Un casque est indispensable</strong> : sans casque, la voix des autres sort du
+                  haut-parleur, entre dans votre micro et apparaît en double, à votre nom.
+                </li>
+                <li>Faites un essai d'une minute avant la séance, puis écoutez les deux pistes (.wav).</li>
+                <li>Demandez à chaque joueur de dire son prénom au début : renommer sera plus facile.</li>
+              </ul>
+              <h3>Discord (Paramètres utilisateur, roue dentée)</h3>
+              <ul>
+                <li>
+                  Voix et vidéo → Périphérique de sortie : <strong>« Default »</strong>. Chrome capte la
+                  sortie son par défaut de Windows : si Discord envoie le son ailleurs, la piste des autres
+                  reste muette.
+                </li>
+                <li>
+                  Mode d'entrée : <strong>Détection de la voix</strong> (« Appuyer pour parler » coupe
+                  souvent le début des phrases).
+                </li>
+                <li>
+                  Clic droit sur chaque joueur → <strong>Volume de l'utilisateur</strong> : réglez pour que
+                  tout le monde s'entende au même niveau.
+                </li>
+                <li>Notifications → Sons : <strong>désactivez les sons</strong> (arrivées, départs, messages) : ils seraient enregistrés.</li>
+                <li>Musique d'ambiance (bot) : <strong>volume bas</strong> (clic droit → volume) : la musique gêne la reconnaissance.</li>
+                <li>
+                  Pour le propriétaire du serveur : Modifier le salon vocal → <strong>Débit binaire au
+                  maximum</strong> (voix de meilleure qualité).
+                </li>
+              </ul>
+              <h3>Windows</h3>
+              <ul>
+                <li>Paramètres → Système → Son : sortie <strong>et</strong> entrée réglées sur votre casque.</li>
+                <li>
+                  Paramètres → Système → Alimentation : mise en veille sur <strong>« Jamais »</strong> pendant
+                  la partie, et l'ordinateur portable branché sur le secteur.
+                </li>
+                <li>
+                  « Écran entier » capte <strong>tous</strong> les sons de l'ordinateur : fermez YouTube,
+                  jeux et musique, et activez « Ne pas déranger » pour les notifications.
+                </li>
+              </ul>
+              <h3>Transcrire une longue séance</h3>
+              <ul>
+                <li>Réglages → Vitesse de calcul : <strong>« Maximale »</strong> (un ordinateur le supporte bien).</li>
+                <li>Qualité « Équilibré + » (plus rapide) ou « Précis » (texte plus juste, plus lent).</li>
+                <li>
+                  Comptez à peu près la durée de la partie, parfois plus : lancez-la par exemple le soir.
+                  Vous pouvez l'arrêter et la reprendre plus tard, elle repart là où elle s'est arrêtée.
+                </li>
+              </ul>
+            </details>
+            <details class="conseils">
+              <summary>⚠️ Limites à connaître</summary>
+              <ul>
+                <li>
+                  <strong>Voix qui se chevauchent</strong> parmi les autres joueurs : une seule voix est
+                  retenue et du texte peut manquer. (Votre voix, sur sa propre piste, n'est jamais mélangée.)
+                </li>
+                <li>
+                  <strong>Discord transforme les voix</strong> (réduction de bruit, compression) : le texte
+                  est un peu moins juste, et deux voix proches peuvent être confondues.
+                </li>
+                <li>
+                  <strong>Qualité variable</strong> : un mauvais micro ou une mauvaise connexion d'un joueur
+                  (voix robotique, coupures) font perdre des mots.
+                </li>
+                <li>
+                  Les numéros « Intervenant 1, 2… » changent d'une séance à l'autre : renommez-les après
+                  chaque transcription, et corrigez les erreurs avec « Corriger qui parle ».
+                </li>
+                <li>Les réponses très courtes (« oui », « d'accord ») sont plus souvent mal attribuées.</li>
+              </ul>
+            </details>
             <p id="capture-espace" class="petit"></p>
             <div class="boutons">
               <button type="button" class="bouton bouton--principal" id="bouton-capture-demarrer">
