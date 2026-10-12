@@ -264,6 +264,15 @@ legend {
   margin: 0;
 }
 
+/* Lien de la section « À propos » (à la fin des Réglages) : même couleur que
+   le texte autour, juste souligné ; une adresse trop longue pour un petit
+   écran passe à la ligne au lieu de déborder. */
+.a-propos-lien a {
+  color: inherit;
+  text-underline-offset: 3px;
+  overflow-wrap: anywhere;
+}
+
 /* ---------- Enregistrement ---------- */
 .chrono {
   font-size: 1.2rem;
