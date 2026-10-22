@@ -173,4 +173,15 @@ supplémentaire.
 
 ## Licence
 
-À définir.
+Distribué sous licence **[PolyForm Noncommercial 1.0.0](LICENSE)** (texte
+officiel en anglais, suivi d'une traduction française à titre indicatif).
+
+Vous pouvez utiliser, modifier et partager ce code librement, à condition que
+ce ne soit pas dans un but commercial et que le fichier de licence accompagne
+toujours le code. Toute utilisation commerciale nécessite l'accord de
+l'auteur. Le logiciel est fourni « en l'état », sans aucune garantie.
+
+Les bibliothèques et modèles tiers (dossiers `vendor/` et `modeles/`) restent
+soumis à leurs propres licences.
+
+© 2026 FerrusDantioch
