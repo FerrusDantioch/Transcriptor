@@ -1,11 +1,11 @@
-# CLAUDE.md — Règles du projet Transcriptor
+# CLAUDE.md — Règles du projet Omni-Transcripteur
 
 Ce fichier est lu par Claude au début de chaque session. Il résume les règles
 de travail à respecter sur ce projet.
 
 ## Le projet
 
-**Transcriptor** est une application web installable (PWA) qui transforme la
+**Omni-Transcripteur** est une application web installable (PWA) qui transforme la
 voix en texte, entièrement dans le navigateur.
 
 Feuille de route :
@@ -119,7 +119,7 @@ icons/                     icônes 192 et 512 px (« any » et « maskable »)
   `sts-whisper-tiny`, utilisé seulement pour les tests, jamais dans l'application).
 - Voix de test : `espeak-ng` (voix de synthèse, très mal reconnue par Whisper tiny :
   la qualité du texte doit être jugée sur une vraie voix, sur le téléphone).
-- Le site est servi dans un sous-dossier (`/Transcriptor/`) comme sur GitHub Pages.
+- Le site est servi dans un sous-dossier (`/omni-transcripteur/`) comme sur GitHub Pages.
 - Voix multiples : dialogues fabriqués avec plusieurs voix espeak-ng (fr+m3, fr+f3,
   fr+m7, fr+f5), en notant qui parle quand, pour mesurer l'attribution.
 - Ne jamais lancer `pkill -f motif` dans une commande qui contient ce motif
@@ -180,7 +180,7 @@ icons/                     icônes 192 et 512 px (« any » et « maskable »)
 
 ## Champ `id` du manifeste : nom du dossier, jamais `./`
 
-`manifest.json` contient `"id": "/Transcriptor/"`. Chrome résout `id` par rapport à
+`manifest.json` contient `"id": "/omni-transcripteur/"`. Chrome résout `id` par rapport à
 la **racine du domaine** (`https://ferrusdantioch.github.io/`), pas par
 rapport au dossier de l'application : `"id": "./"` (ou `"."`) donnait donc
 l'identité de la racine du site, la même pour toutes les applications qui
@@ -189,6 +189,11 @@ l'utilisaient. C'est une exception voulue à la règle des chemins relatifs.
 Ne plus changer cette valeur : pour Chrome, une application déjà installée
 dont l'`id` change devient une autre application (il faut la désinstaller
 puis la réinstaller pour qu'elle reprenne les mises à jour).
+
+Exception unique (octobre 2026) : l'application s'appelait « Transcriptor » et
+vivait à `/Transcriptor/`. Le renommage du dépôt a changé son adresse,
+donc son `id` : les personnes qui l'avaient installée doivent la réinstaller
+depuis la nouvelle adresse (leurs données restent, le stockage n'a pas changé).
 
 ## ⚠️ Plusieurs applications sur `ferrusdantioch.github.io` : limite de Chrome Android
 

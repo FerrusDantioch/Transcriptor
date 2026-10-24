@@ -48,7 +48,7 @@ export async function demanderPartage(source) {
         suppressLocalAudioPlayback: false, // vous continuez à entendre Discord
       },
       systemAudio: "include",         // propose « Partager l'audio du système » (Windows)
-      selfBrowserSurface: "exclude",  // empêche de partager l'onglet de Transcriptor lui-même
+      selfBrowserSurface: "exclude",  // empêche de partager l'onglet d'Omni-Transcripteur lui-même
       surfaceSwitching: "exclude",
     });
   } catch (erreur) {

@@ -1,7 +1,7 @@
 {
-  "id": "/Transcriptor/",
-  "name": "Transcriptor",
-  "short_name": "Transcriptor",
+  "id": "/omni-transcripteur/",
+  "name": "Omni-Transcripteur",
+  "short_name": "Omni-Transcripteur",
   "description": "Transforme la voix en texte, directement sur votre appareil, même hors ligne.",
   "lang": "fr",
   "dir": "ltr",

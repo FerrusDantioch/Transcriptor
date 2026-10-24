@@ -1,6 +1,6 @@
-# Transcriptor
+# Omni-Transcripteur
 
-**Transcriptor** transforme la voix en texte, directement dans votre navigateur.
+**Omni-Transcripteur** transforme la voix en texte, directement dans votre navigateur.
 
 - 🎙️ Transcription depuis le micro ou depuis un fichier audio.
 - 🔒 **Respect de la vie privée** : l'audio est traité sur votre appareil,
@@ -157,10 +157,10 @@ icons/                icônes de l'application
    puis cliquez sur **Save**.
 4. Attendez 1 à 2 minutes, puis rechargez la page **Settings → Pages** :
    l'adresse du site s'affiche en haut (par exemple
-   `https://ferrusdantioch.github.io/Transcriptor/`).
+   `https://ferrusdantioch.github.io/omni-transcripteur/`).
 
 Tous les chemins du projet sont **relatifs** (ils commencent par `./`) : le
-site fonctionne donc dans le sous-dossier `/Transcriptor/` sans réglage
+site fonctionne donc dans le sous-dossier `/omni-transcripteur/` sans réglage
 supplémentaire.
 
 ## Technologies

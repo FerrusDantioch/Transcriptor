@@ -1,5 +1,5 @@
 // ==========================================================
-// Service worker de Transcriptor.
+// Service worker d'Omni-Transcripteur.
 // Il met les fichiers de l'application en réserve (« cache ») pour
 // qu'elle fonctionne hors ligne.
 //
@@ -10,7 +10,7 @@
 // ⚠️ À CHAQUE MODIFICATION d'un fichier de l'application, augmenter ce
 // numéro (v1 → v2 → v3…). Sinon les téléphones garderont l'ancienne
 // version en réserve.
-const VERSION_CACHE = "transcriptor-app-v15";
+const VERSION_CACHE = "omni-transcripteur-app-v16";
 
 // Liste des fichiers à garder en réserve.
 // Chemins relatifs : ils fonctionnent aussi dans le sous-dossier GitHub Pages.
@@ -82,7 +82,10 @@ self.addEventListener("install", (evenement) => {
 });
 
 // 2) Activation : on supprime les réserves des anciennes versions de
-//    l'application (mais pas le moteur de calcul ni les modèles)
+//    l'application, y compris celles de l'époque où elle s'appelait
+//    « Transcriptor » (mais pas le moteur de calcul ni les modèles, qui
+//    gardent exprès leur ancien nom « transcriptor-moteur-… » pour ne pas
+//    être retéléchargés)
 self.addEventListener("activate", (evenement) => {
   evenement.waitUntil(
     caches
@@ -90,7 +93,7 @@ self.addEventListener("activate", (evenement) => {
       .then((noms) =>
         Promise.all(
           noms
-            .filter((nom) => nom.startsWith("transcriptor-") && !nom.startsWith("transcriptor-moteur-"))
+            .filter((nom) => (nom.startsWith("omni-transcripteur-") || nom.startsWith("transcriptor-")) && !nom.startsWith("transcriptor-moteur-"))
             .filter((nom) => nom !== VERSION_CACHE)
             .map((nom) => caches.delete(nom))
         )
