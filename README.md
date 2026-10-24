@@ -173,17 +173,16 @@ supplémentaire.
 
 ## Licence
 
-Distribué sous licence **[Creative Commons BY-NC-ND 4.0](LICENSE)**
-(Attribution - Utilisation non commerciale - Pas d'Œuvre dérivée), avec le
-texte officiel en anglais et sa traduction française officielle.
+**© 2026 Ferrus Dantioch — Creative Commons BY-NC-ND 4.0**
+([résumé de la licence en français](https://creativecommons.org/licenses/by-nc-nd/4.0/deed.fr))
 
-Vous pouvez utiliser ce logiciel et en partager des copies identiques,
-gratuitement, à condition de citer l'auteur (Ferrus Dantioch) et d'indiquer la
-licence. Il est interdit de le vendre ou d'en tirer un profit commercial, et
-de diffuser une version modifiée. Le logiciel est fourni « en l'état », sans
-aucune garantie.
+En clair : le partage est autorisé, à l'identique et en citant l'auteur ;
+l'usage commercial est interdit ; la modification et les œuvres dérivées
+sont interdites. Le logiciel est fourni « en l'état », sans aucune garantie.
+
+Texte complet dans le fichier [LICENSE](LICENSE) : le texte officiel en
+anglais, suivi de la traduction française officielle publiée par Creative
+Commons.
 
 Les bibliothèques et modèles tiers (dossiers `vendor/` et `modeles/`) restent
 soumis à leurs propres licences.
-
-© 2026 FerrusDantioch
